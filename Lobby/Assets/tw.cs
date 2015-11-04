@@ -26,7 +26,7 @@ public class tw : MonoBehaviour {
 	private string _credit;
 	private string _UIlog = "";
 
-
+	private WebSocket _ws;
 
 	private bool loginOk = false;
 
@@ -42,14 +42,12 @@ public class tw : MonoBehaviour {
 	public void connect()
 	{
 		_UIlog = "connect";
-		using (var ws = new WebSocket ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d")) {
-			ws.OnMessage += (sender, e) => {
-				_UIlog = e.Data;
+		_ws = new WebSocket ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d");
+		_ws.OnMessage += (sender, e) => {
+				_UIlog += e.Data +"\r\n";
 				Debug.Log ("onMessage says: " + e.Data);
-				Debug.Log("json ob 1"+ e.Data);
-				Debug.Log("json ob 1.5 ="); 
+				Debug.Log("json ob 1"+ e.Data);				
 				jo = JsonConvert.DeserializeObject<JObject>(e.Data);
-				//Debug.Log("json ob 2 = "+jo.Property("message_type").Value);
 				Debug.Log("json ob 1 = "+jo.Property("player_info").Value);
 
 				//TODO level 2 how to split
@@ -62,24 +60,24 @@ public class tw : MonoBehaviour {
 				loginOk = true;
 
 			};
-			ws.OnClose += (sender, e) => {
+		_ws.OnClose += (sender, e) => {
 				Debug.Log ("ws close" + e.Code);
-				_UIlog = "close"+ e.Code;
+				_UIlog += "close"+ e.Code + "\r\n";
 				if( e.Code != 1001)_UIlog = "ws close =" +e.Code;
 			};
-			ws.OnError += (sender, e) => {
+		_ws.OnError += (sender, e) => {
 				Debug.Log ("ws error" + e.Exception);
-				_UIlog = "ws error =" +e.Exception.ToString();
+				_UIlog += "ws error =" +e.Exception.ToString() +"\r\n";
 			};
-			ws.OnOpen += (sender, e) => {
+		_ws.OnOpen += (sender, e) => {
 				Debug.Log ("ws open");
-				_UIlog = "open";
+				_UIlog += "open"+ "\r\n";
 			};
 		
-			ws.Connect ();
+		_ws.Connect ();
 			//ws.ConnectAsync ();
 			//ws.Send ("BALUS");
-		}
+
 	}
 
 	// Update is called once per frame
@@ -91,9 +89,14 @@ public class tw : MonoBehaviour {
 			cave.gameObject.SetActive(true);
 			name.text = _name;
 			credit.text = _credit;
-			_UIlog = "";
+			//_UIlog = "";
 			mesh.text = _credit;
 		}
+	}
+
+	void OnDestroy() {
+		_ws.Close ();
+		Debug.Log ("destroy");
 	}
 
 
