@@ -16,8 +16,6 @@ public class tw : MonoBehaviour {
 	public GameObject cave;
 	private JObject jo = new JObject();
 
-	public TextMesh mesh;
-
 	public Text name;
 	public Text credit;
 	public Text uilog;
@@ -46,15 +44,15 @@ public class tw : MonoBehaviour {
 		_ws.OnMessage += (sender, e) => {
 				_UIlog += e.Data +"\r\n";
 				Debug.Log ("onMessage says: " + e.Data);
-				Debug.Log("json ob 1"+ e.Data);				
+
 				jo = JsonConvert.DeserializeObject<JObject>(e.Data);
-				Debug.Log("json ob 1 = "+jo.Property("player_info").Value);
+				//Debug.Log("json ob 1 = "+jo.Property("player_info").Value);
 
 				//TODO level 2 how to split
 				JObject jo2 = new JObject();
 				jo2 = JsonConvert.DeserializeObject<JObject>(jo.Property("player_info").Value.ToString());
 				Debug.Log("json ob 2 = "+jo2.Property("player_name").Value);
-				_name = jo2.Property("player_account").Value.ToString();
+				_name = jo2.Property("player_name").Value.ToString();
 				_credit = jo2.Property("player_credit").Value.ToString();
 
 				loginOk = true;
@@ -90,7 +88,6 @@ public class tw : MonoBehaviour {
 			name.text = _name;
 			credit.text = _credit;
 			//_UIlog = "";
-			mesh.text = _credit;
 		}
 	}
 
