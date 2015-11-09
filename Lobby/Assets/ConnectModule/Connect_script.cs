@@ -22,8 +22,6 @@ public class Connect_script : MonoBehaviour {
 		_Connector.create ();
 		_Connector.MsgResponse += OnMessage;
 
-		//TODO isolate to Independon script
-		DontDestroyOnLoad(this);
 		_Connector.connect ();
 	}
 
@@ -62,6 +60,9 @@ public class Connect_script : MonoBehaviour {
 	{
 		Debug.Log ("click3");	
 		_log.textContent = "clieck3";
+		string s = "0,0,0,0";
+		_avalibelist.set_avalible(new List<string>(s.Split(',')));
+		Application.LoadLevel("DK");
 	}
 
 	// Update is called once per frame
