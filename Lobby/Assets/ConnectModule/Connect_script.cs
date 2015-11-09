@@ -37,7 +37,6 @@ public class Connect_script : MonoBehaviour {
 			_credit.textContent = e.pack["player_credit"];
 			Debug.Log("pack all = "+ e.pack["game_avaliable"]);
 			string s = e.pack["game_avaliable"];
-			//s.Split(',').toLi
 			_avalibelist.set_avalible(new List<string>(s.Split(',')));
 
 		}
@@ -45,6 +44,24 @@ public class Connect_script : MonoBehaviour {
 		{
 			Debug.Log("pack all = "+ e.pack["_all"]);
 		}
+	}
+
+	public void click1()
+	{
+		Debug.Log ("click1");	
+		_log.textContent = "clieck1";
+	}
+
+	public void click2()
+	{
+		Debug.Log ("click2");	
+		_log.textContent = "clieck2";
+	}
+
+	public void click3()
+	{
+		Debug.Log ("click3");	
+		_log.textContent = "clieck3";
 	}
 
 	// Update is called once per frame

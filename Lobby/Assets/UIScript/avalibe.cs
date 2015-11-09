@@ -13,6 +13,7 @@ public class avalibe : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		viewUpdate = false;
+
 	}
 
 	public void set_avalible(List<string> openlist)
