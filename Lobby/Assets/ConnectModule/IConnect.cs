@@ -14,6 +14,7 @@ namespace ConnectModule
 
 		public virtual void create(){}
 		public virtual void connect(){}
+		public virtual void close(){}
 
 		public event EventHandler<packArgs> MsgResponse;
 
