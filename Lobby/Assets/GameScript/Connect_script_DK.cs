@@ -35,7 +35,7 @@ public class Connect_script_DK: MonoBehaviour {
 		_log = GameObject.Find ("Log").GetComponent<UI_Text>();
 		_avalibelist = GameObject.Find ("avalibe_DK").GetComponent<avalibe>();
 		_state_m = new StateMachine ();
-
+		_state_m.state = "None";
 
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
@@ -57,6 +57,10 @@ public class Connect_script_DK: MonoBehaviour {
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = _state;
+			List<string> openlist = _state_m.stateupdate(_state);
+			_avalibelist.set_avalible(openlist);
+
+
 			_gameround = e.pack["game_round"];
 			_gameid = e.pack["game_id"];
 			Debug.Log("pack all p= "+ e.pack["player_card_list"]);
@@ -68,19 +72,24 @@ public class Connect_script_DK: MonoBehaviour {
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = _state;
-
+			List<string> openlist = _state_m.stateupdate(_state);
+			_avalibelist.set_avalible(openlist);
 		}
 		if (st == "MsgBPOpenCard") 
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = _state;
 			Debug.Log("carty = "+e.pack["card_type"]);
+			List<string> openlist = _state_m.stateupdate(_state);
+			_avalibelist.set_avalible(openlist);
 		}
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = _state;
 			Debug.Log("carty = "+e.pack["bet_type"]);
+			List<string> openlist = _state_m.stateupdate(_state);
+			_avalibelist.set_avalible(openlist);
 		}
 		if (st == "check") 
 		{
