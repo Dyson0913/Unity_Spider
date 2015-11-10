@@ -23,13 +23,16 @@ namespace ConnectModule
 			JObject jo = new JObject();
 			jo = JsonConvert.DeserializeObject<JObject>(data);
 			Dictionary<string,string> pack = new Dictionary<string,string> ();
-			if (jo.Property ("message_type").Value.ToString () == "MsgLogin")
+			string pack_type = jo.Property ("message_type").Value.ToString ();
+
+			if (pack_type == "MsgLogin")
 			{
-				pack.Add ("message_type", jo.Property ("message_type").Value.ToString ());
+				pack.Add ("message_type", pack_type);
 				JObject jo2 = new JObject ();
 				jo2 = JsonConvert.DeserializeObject<JObject> (jo.Property ("player_info").Value.ToString ());
 				pack.Add ("player_name", jo2.Property ("player_name").Value.ToString ());
 				pack.Add ("player_credit", jo2.Property ("player_credit").Value.ToString ());
+				pack.Add ("player_uuid", jo2.Property ("player_uuid").Value.ToString ());
 				
 				//game_list
 				JArray jo3 = new JArray ();
@@ -57,9 +60,9 @@ namespace ConnectModule
 				pack.Add("game_id",String.Join(",",game_id.ToArray()));
 				pack.Add("game_avaliable",String.Join(",",game_avaliable.ToArray()));
 
-			} else if (jo.Property ("message_type").Value.ToString () == "MsgKeepLive") 
+			} else if (pack_type == "MsgKeepLive") 
 			{
-				//TODO 
+				pack.Add ("message_type", pack_type);
 			}
 			else 
 			{

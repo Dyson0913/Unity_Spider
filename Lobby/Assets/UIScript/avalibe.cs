@@ -27,7 +27,7 @@ public class avalibe : MonoBehaviour {
 		viewUpdate = false;
 		for (int i=0; i< _list.Count; i++) 
 		{
-			Debug.Log ("open[i] = "+data[i]);
+			//Debug.Log ("open[i] = "+data[i]);
 			bool open = false;
 			if( data[i] =="1") open = true;
 			else open = false;

@@ -17,8 +17,17 @@ namespace ConnectModule
 		public virtual void close(){}
 		public IParser parser { get; set; }
 
-		public event EventHandler<packArgs> MsgResponse;
 
+		public event EventHandler<stringArgs> stateResponse;
+		public void socket_state(stringArgs state)
+		{
+			if (stateResponse != null) 
+			{
+				stateResponse(this, state);
+			}
+		}
+
+		public event EventHandler<packArgs> MsgResponse;
 		public void packparse_over(packArgs p)
 		{
 			if (MsgResponse != null) 

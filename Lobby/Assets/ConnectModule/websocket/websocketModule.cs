@@ -54,7 +54,8 @@ namespace ConnectModule
 
 		private void OnOpen(object sender,EventArgs e)
 		{
-
+			stringArgs s = new stringArgs ("open");
+			socket_state (s);
 		}
 
 		private void OnMessage(object sender,WebSocketSharp.MessageEventArgs e)
@@ -64,14 +65,16 @@ namespace ConnectModule
 		}
 
 
-		private void OnClose(object sender,EventArgs e)
+		private void OnClose(object sender,WebSocketSharp.CloseEventArgs e)
 		{
-			
+			stringArgs pack = new stringArgs(e.Code.ToString());
+			socket_state(pack);
 		}
 		 
-		private void OnError(object sender,EventArgs e)
+		private void OnError(object sender,WebSocketSharp.ErrorEventArgs e)
 		{
-			
+			stringArgs s = new stringArgs(e.Message);
+			socket_state (s);
 		}
 
 
