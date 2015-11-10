@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 using ConnectModule;
 
-public class Connect_script : MonoBehaviour {
+public class Connect_script_lobby : MonoBehaviour {
 
 	private IConnect _Connector;
 
@@ -18,8 +18,9 @@ public class Connect_script : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		_Connector = websocketModule.Instance;
-		_Connector.create ();
+		_Connector = new websocketModule();
+		_Connector.parser = new lobby_parser ();
+		_Connector.create ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d");
 		_Connector.MsgResponse += OnMessage;
 
 		_Connector.connect ();

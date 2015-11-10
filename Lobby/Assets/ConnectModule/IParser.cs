@@ -5,17 +5,14 @@ using System;
 
 namespace ConnectModule
 {
-	public class IConnect 
+	public class IParser 
 	{
-		public IConnect()
+		public IParser()
 		{
 
 		}
 
-		public virtual void create(string url){}
-		public virtual void connect(){}
-		public virtual void close(){}
-		public IParser parser { get; set; }
+		public virtual packArgs paser(string data){ return null;}
 
 		public event EventHandler<packArgs> MsgResponse;
 
@@ -26,11 +23,5 @@ namespace ConnectModule
 				MsgResponse(this, p);
 			}
 		}
-
-		public void send_to_Server(){}
-
-
-
-
 	}
 }
