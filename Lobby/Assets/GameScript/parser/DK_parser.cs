@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 using ConnectModule;
 
-namespace ConnectModule
+namespace GameScript.parser
 {
 	public class DK_parser : IParser
 	{
@@ -103,11 +103,8 @@ namespace ConnectModule
 			for (int i =0; i< arr.Count; i++) 
 			{
 				JObject ch = (JObject)arr [i];
-
-
 				for (int k=0; k< ls.Count; k++) 
 				{
-					string s = ls[k];
 					all[k].Add (ch.Property (ls[k]).Value.ToString ());
 				}
 			}

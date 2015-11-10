@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 using ConnectModule;
 
-namespace ConnectModule
+namespace GameScript.parser
 {
 	public class lobby_parser : IParser
 	{

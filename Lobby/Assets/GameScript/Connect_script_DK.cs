@@ -1,24 +1,30 @@
 ﻿using UnityEngine;
 using System.Collections;
-
 using System.Collections.Generic;
 
-
-
 using ConnectModule;
+using GameScript.parser;
+using GameCommon.StateMachine;
+
 
 public class Connect_script_DK: MonoBehaviour {
 
 	private IConnect _Connector;
 
+	//ui
 	public UI_Text _name;
 	public UI_Text _credit;
 	public UI_Text _log;
+
+	//delegate
 	public avalibe _avalibelist;
 
+	private StateMachine _state_m;
+	//data 
 	private string _state;
 	private string _gameround;
 	private string _gameid;
+
 
 	public string _uuid;
 
@@ -27,6 +33,10 @@ public class Connect_script_DK: MonoBehaviour {
 
 		//Debug.Log ("uuid = "+ "ws://106.186.116.216:8201/gamesocket/token/"+_uuid);		 
 		_log = GameObject.Find ("Log").GetComponent<UI_Text>();
+		_avalibelist = GameObject.Find ("avalibe_DK").GetComponent<avalibe>();
+		_state_m = new StateMachine ();
+
+
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
 		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_uuid);

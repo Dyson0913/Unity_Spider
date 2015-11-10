@@ -1,11 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
-
 using System.Collections.Generic;
 
-
-
 using ConnectModule;
+using GameScript.parser;
 
 public class Connect_script_lobby : MonoBehaviour {
 
