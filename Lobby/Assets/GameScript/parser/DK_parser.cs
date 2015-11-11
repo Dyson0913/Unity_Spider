@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 //json
 using Newtonsoft.Json;
@@ -38,8 +39,31 @@ namespace GameScript.parser
 				pack.Add ("river_card_list", p.Property ("river_card_list").Value.ToString ());
 				pack.Add ("extra_card_list", p.Property ("extra_card_list").Value.ToString ());
 
+				JArray ja = JArray.Parse(p.Property ("player_card_list").Value.ToString ());
 
-//				
+				pack.Add ("len", ja.Count.ToString());
+				pack.Add ("suc", ja.First.ToString());	
+				pack.Add ("lst", ja.Last.ToString());	
+
+
+
+//				string pattern = @"\\[(\\"(.+)\\")[\,]*(\\"(.+)\\")\\]";
+//				Regex re = new Regex(pattern,RegexOptions.IgnoreCase);
+//				Match match = Regex.Match(p.Property ("player_card_list").Value.ToString (),pattern);
+//
+//				string key = "";
+//				int len = 0;
+//				if(match.Success)
+//				{
+//					 len = match.Groups.Count;
+//
+//					key = match.Groups[2].Value;
+//				}
+//				pack.Add ("suc", match.Success.ToString());
+//				pack.Add ("key", key);
+//				pack.Add ("len", len.ToString());
+//				pack.Add ("all", match.Groups[2].ToString());
+
 //				pack.Add ("player_card_list", jo2.Property ("player_card_list").Value.ToString ());
 //				pack.Add ("river_card_list", jo2.Property ("river_card_list").Value.ToString ());
 
