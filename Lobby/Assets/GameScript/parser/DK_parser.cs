@@ -41,9 +41,16 @@ namespace GameScript.parser
 
 				JArray ja = JArray.Parse(p.Property ("player_card_list").Value.ToString ());
 
-				pack.Add ("len", ja.Count.ToString());
-				pack.Add ("suc", ja.First.ToString());	
-				pack.Add ("lst", ja.Last.ToString());	
+				List<string> pcard = new List<string>();
+				foreach(string st in ja)
+				{
+					pcard.Add(st);
+				}
+				pack.Add ("pcard",String.Join(",",pcard.ToArray()));	
+
+
+
+
 
 
 
@@ -85,8 +92,14 @@ namespace GameScript.parser
 				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
 				pack.Add ("card_type", jo.Property ("card_type").Value.ToString ());
 
-
-				pack.Add ("card_list", jo.Property ("card_list").Value.ToString());
+				JArray ja = JArray.Parse(jo.Property ("card_list").Value.ToString ());
+				
+				List<string> pcard = new List<string>();
+				foreach(string st in ja)
+				{
+					pcard.Add(st);
+				}
+				pack.Add ("card_list", string.Join(",",pcard.ToArray()));
 				//List<string > poker = new List<string> ();
 				//poker.Add ("card_list");
 				//arr_parse (pack, jo.Property ("card_list").Value.ToString (), poker);

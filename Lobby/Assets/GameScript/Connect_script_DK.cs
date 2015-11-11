@@ -94,9 +94,7 @@ public class Connect_script_DK: MonoBehaviour {
 				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
 				//_bet_timer.
 			}
-			Debug.Log("pack all suc= "+ e.pack["suc"]);
-			Debug.Log("pack all len= "+ e.pack["len"]);
-			Debug.Log("pack all lst= "+ e.pack["lst"]);
+			Debug.Log("pack all suc= "+ e.pack["pcard"]);
 
 			Debug.Log("pack all p= "+ e.pack["player_card_list"]);
 			Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
