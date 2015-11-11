@@ -7,17 +7,21 @@ namespace GameCommon.StateMachine
 	public class StateMachine 
 	{
 		public string state { get; set; }
-
+		private string _prestate;
 
 		public StateMachine()
 		{
-			
+			_prestate = "None";
 		}
 
 		public List<string> stateupdate(string state)
 		{
 			if (state == "None")
 				return null;
+
+			if (_prestate == state)
+				return null;
+
 			//bet,open settle
 			List<string> avalible_list = new List<string> ();
 			if (state == "NewRoundState") 
@@ -45,6 +49,7 @@ namespace GameCommon.StateMachine
 				avalible_list.Add("1");
 			}
 
+			_prestate = state;
 			return avalible_list;
 		}
 

@@ -54,14 +54,23 @@ namespace GameScript.parser
 			} else if (pack_type == "MsgBPState") {
 				pack.Add ("message_type", pack_type);
 				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
+				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
 			} else if (pack_type == "MsgBPOpenCard") {
 				pack.Add ("message_type", pack_type);
 				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
+				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
 				pack.Add ("card_type", jo.Property ("card_type").Value.ToString ());
 
+
+				pack.Add ("card_list", jo.Property ("card_list").Value.ToString());
 				//List<string > poker = new List<string> ();
 				//poker.Add ("card_list");
 				//arr_parse (pack, jo.Property ("card_list").Value.ToString (), poker);
+
+//				JArray arr = new JArray ();
+//				arr = JsonConvert.DeserializeObject<JArray> (jo.Property ("card_list").Value.ToString());
+//				JObject ch = (JObject)arr [0];
+//				pack.Add ("card_list", ch.ToString());
 
 			}
 			else if (pack_type == "MsgBPEndRound") 

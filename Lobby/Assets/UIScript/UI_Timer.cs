@@ -4,17 +4,26 @@ using UnityEngine.UI;
 
 public class UI_Timer : MonoBehaviour {
 
-	private Text _text;
-	public string textContent{ get; set; }
+	public float delta;
+	public float delay;
+	public string timer_call{ get; set; }
+	public GameObject needTimerob;
+
 	// Use this for initialization
 	void Start () 
 	{	
-		_text = this.GetComponent<Text>();
-		textContent = "";
+		needTimerob = this.gameObject;
+		timer_call = needTimerob.GetComponent<UI_Text> ().timer_call;
+	}
+
+	public void excute()
+	{
+		InvokeRepeating (timer_call, delay, delta);
+	}
+
+	public void stop()
+	{
+		CancelInvoke (timer_call);
 	}
 	
-	// Update is called once per frame
-	void Update () {
-		_text.text = textContent;
-	}
 }
