@@ -64,6 +64,13 @@ namespace GameScript.parser
 			{
 				pack.Add ("message_type", pack_type);
 			}
+			else if (pack_type == "MsgPlayerCreditUpdate") 
+			{
+				pack.Add ("message_type", pack_type);
+				JObject jo2 = new JObject ();
+				jo2 = JsonConvert.DeserializeObject<JObject> (jo.Property ("player_info").Value.ToString ());
+				pack.Add ("player_credit", jo2.Property ("player_credit").Value.ToString ());
+			}
 			else 
 			{
 				pack.Add ("message_type", "check");

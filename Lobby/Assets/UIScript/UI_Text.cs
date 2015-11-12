@@ -20,10 +20,22 @@ public class UI_Text : MonoBehaviour {
 		_text.text = textContent;
 	}
 
+	public void count_douwn()
+	{
+		InvokeRepeating("sub", 0, 1);
+	}
+
 	public void sub()
 	{
 		int cnt = int.Parse(textContent);
+
 		cnt -= 1;
+		if (cnt == -1)
+		{
+			textContent = "";
+			CancelInvoke();
+			return;
+		}
 		textContent = cnt.ToString ();
 	}
 }

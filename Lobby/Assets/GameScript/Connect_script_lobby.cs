@@ -44,18 +44,19 @@ public class Connect_script_lobby : MonoBehaviour {
 	{
 		//Debug.Log ("Lobby message = " + e.pack ["message_type"]);
 		string state = e.pack ["message_type"];
-		if (state == "MsgLogin") 
-		{
-			_name.textContent = e.pack["player_name"];
-			_credit.textContent = e.pack["player_credit"];
-			_model.putValue("uuid",e.pack["player_uuid"]);
-			string s = e.pack["game_avaliable"];
-			_avalibelist.set_avalible(new List<string>(s.Split(',')));
+		if (state == "MsgLogin") {
+			_name.textContent = e.pack ["player_name"];
+			_credit.textContent = e.pack ["player_credit"];
+			_model.putValue ("uuid", e.pack ["player_uuid"]);
+			string s = e.pack ["game_avaliable"];
+			_avalibelist.set_avalible (new List<string> (s.Split (',')));
 
-		}
-		else if (state == "MsgKeepLive") 
-		{
+		} else if (state == "MsgKeepLive") {
 
+		} 
+		else if (state == "MsgPlayerCreditUpdate") 
+		{
+			_credit.textContent = e.pack ["player_credit"];
 		}
 		if (e.pack ["message_type"] == "check") 
 		{

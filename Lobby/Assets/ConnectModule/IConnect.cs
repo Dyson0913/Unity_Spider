@@ -36,7 +36,10 @@ namespace ConnectModule
 			}
 		}
 
-		public void send_to_Server(){}
+		public virtual void send_to_Server(string jsonString)
+		{
+
+		}
 
 
 

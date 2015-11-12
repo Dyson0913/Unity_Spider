@@ -3,10 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using ConnectModule;
 using GameCommon.Model;
 using GameScript.parser;
 using GameCommon.StateMachine;
+
 
 
 public class Connect_script_DK: MonoBehaviour {
@@ -17,9 +22,9 @@ public class Connect_script_DK: MonoBehaviour {
 	public UI_Text _ui_gameround;
 	public UI_Text _credit;
 	public UI_Text _log;
-	public UI_Timer _bet_timer;
+	public UI_Text _bet_timer;
 
-
+	public List<UI_Text> bet_amount_list;
 	public List<Button> coin_list;
 	public List<UI_Text> cardlist;
 	public List<Button> _btnlist;
@@ -32,8 +37,6 @@ public class Connect_script_DK: MonoBehaviour {
 	//data 
 	private Model _model = Model.Instance;
 	private string _state;
-	private string _gameround;
-	private string _gameid;
 
 	private List<string> playercard;
 	private List<string> bankercard;
@@ -77,21 +80,23 @@ public class Connect_script_DK: MonoBehaviour {
 			coin.onClick.AddListener(()=>coin_select(idx));	
 		}
 		_prebtn = "";
-		
-//		foreach (UI_Text text in cardlist) 
-//		{
-//			//work aroud
-//			Debug.Log("ini ");
-//			text.textContent = "";
-//		}
 
+		foreach (UI_Text bet in bet_amount_list) 
+		{
+			//work aroud
+			bet.textContent = "";
+		}
+
+
+		_bet_timer.textContent = "10";
+		_bet_timer.count_douwn();
 
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
 		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
-		_Connector.connect ();
+		//_Connector.connect ();
 	}
 
 	private void Onstate(object sender,stringArgs e)
@@ -109,18 +114,18 @@ public class Connect_script_DK: MonoBehaviour {
 			List<string> openlist = _state_m.stateupdate(_state);
 			_avalibelist.set_avalible(openlist);
 
-			_gameid = e.pack["game_id"];
-
+			_model.putValue("game_id",e.pack["game_id"]);
+			_model.putValue("game_type",e.pack["game_type"]);
+			_model.putValue("game_round",e.pack["game_round"]);
 			if( openlist[0] =="1")
 			{
-				_gameround = e.pack["game_round"];
-				_ui_gameround.textContent = "局號:"+ _gameround;
+				_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 
 				//timer
-				//_bet_timer.excute();
-				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
-				//_bet_timer.
+				_bet_timer.textContent = e.pack["remain_time"];
+				_bet_timer.count_douwn();
 			}
+
 			if( openlist[1] =="1")
 			{
 
@@ -171,8 +176,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 			if( openlist[0] =="1")
 			{
-				_gameround = e.pack["game_round"];
-				_ui_gameround.textContent = "局號:"+ _gameround;
+				_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 
 				//timer
 				//_bet_timer.excute();
@@ -193,14 +197,8 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
-				if( playercard.Count == 0)
-				{
-					cardlist[0].textContent = e.pack["card_list"];
-				}
-				if( playercard.Count == 1)
-				{
-					cardlist[1].textContent = e.pack["card_list"];
-				}
+				if( playercard.Count == 0)cardlist[0].textContent = e.pack["card_list"];
+				if( playercard.Count == 1)cardlist[1].textContent = e.pack["card_list"];
 				playercard.Add(e.pack["card_list"]);
 			}
 
@@ -238,6 +236,23 @@ public class Connect_script_DK: MonoBehaviour {
 	public void betType(string btnname)
 	{
 		Debug.Log ("btnname = "+btnname);
+
+
+		JObject ob = new JObject
+		{
+			{ "id",_model.getValue("uuid")},
+			{ "timestamp",1111},
+			{"message_type","MsgPlayerBet"},
+			{"game_id",_model.getValue("game_id")},
+			{"game_type",_model.getValue("game_type")},
+			{"game_round",_model.getValue("game_round")},
+			{"bet_type", "BetBWPlayer"},
+			{"bet_amount",100},
+			{"total_bet_amount",100}
+		};
+		Debug.Log ("ob = "+ob.ToString());
+
+		//_Connector.send_to_Server(ob.ToString());
 	}
 
 	public void coin_select(string btnname)

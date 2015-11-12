@@ -30,6 +30,8 @@ namespace GameScript.parser
 				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
 				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
 				pack.Add ("game_id", jo.Property ("game_id").Value.ToString ());
+				pack.Add ("game_type", jo.Property ("game_type").Value.ToString ());
+				pack.Add ("remain_time", jo.Property ("remain_time").Value.ToString ());
 
 				JObject p = new JObject ();
 				p = JsonConvert.DeserializeObject<JObject> (jo.Property ("cards_info").Value.ToString ());
@@ -84,6 +86,11 @@ namespace GameScript.parser
 				poker.Add ("bet_amount");
 				arr_parse (pack, jo.Property ("result_list").Value.ToString (), poker);
 			}
+			else if (pack_type == "MsgPlayerBet") 
+			{
+				pack.Add ("message_type", pack_type);
+				pack.Add ("result", jo.Property ("result").Value.ToString ());
+			}
 			else 
 			{
 				pack.Add ("message_type", "check");
@@ -91,7 +98,6 @@ namespace GameScript.parser
 			}
 
 			return new packArgs(pack);
-			//			if (jo.Property ("message_type").Value.ToString() == "MsgPlayerCreditUpdate") 
 		}
 
 		public string arr_parse_no_token(string str)
