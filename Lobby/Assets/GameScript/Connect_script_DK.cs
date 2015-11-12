@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 using ConnectModule;
+using GameCommon.Model;
 using GameScript.parser;
 using GameCommon.StateMachine;
 
@@ -17,43 +19,39 @@ public class Connect_script_DK: MonoBehaviour {
 	public UI_Text _log;
 	public UI_Timer _bet_timer;
 
-	public UI_Text _pcard1;
-	public UI_Text _pcard2;
 
-	public UI_Text _bcard1;
-	public UI_Text _bcard2;
-
-	public UI_Text _rcard1;
-	public UI_Text _rcard2;
+	public List<UI_Text> cardlist;
+	public List<Button> _btnlist;
 
 	//delegate
 	public avalibe _avalibelist;
 
 	private StateMachine _state_m;
+
 	//data 
+	private Model _model = Model.Instance;
 	private string _state;
 	private string _gameround;
 	private string _gameid;
 
-	List<string> playercard;
-	List<string> bankercard;
-	List<string> rivercard;
+	private List<string> playercard;
+	private List<string> bankercard;
+	private List<string> rivercard;
 
-	public string _uuid;
+	private List<int> betamount;
+
+
+
+	public int _coinSelect;
+
+
 
 	// Use this for initialization
 	void Start () {
 
-		//Debug.Log ("uuid = "+ "ws://106.186.116.216:8201/gamesocket/token/"+_uuid);		 
+		Debug.Log ("uuid = "+ "ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));		 
 		_log = GameObject.Find ("Log").GetComponent<UI_Text>();
 		_ui_gameround = GameObject.Find ("gameround").GetComponent<UI_Text>();
-
-		_pcard1 = GameObject.Find ("Card_Text_1").GetComponent<UI_Text>();
-		_pcard2 = GameObject.Find ("Card_Text_2").GetComponent<UI_Text>();
-		_bcard1 = GameObject.Find ("Card_Text_3").GetComponent<UI_Text>();
-		_bcard2 = GameObject.Find ("Card_Text_4").GetComponent<UI_Text>();
-		_rcard1 = GameObject.Find ("Card_Text_5").GetComponent<UI_Text>();
-		_rcard2 = GameObject.Find ("Card_Text_6").GetComponent<UI_Text>();
 
 		_avalibelist = GameObject.Find ("avalibe_DK").GetComponent<avalibe>();
 		_state_m = new StateMachine ();
@@ -62,15 +60,29 @@ public class Connect_script_DK: MonoBehaviour {
 		playercard = new List<string> ();
 		bankercard = new List<string> ();
 		rivercard = new List<string> ();
-//		List<string> openlist = new List<string> ();
-//		openlist.Add ("0");
-//		openlist.Add ("0");
-//		openlist.Add ("0");
-//		_avalibelist.set_avalible(openlist);
+		betamount = new List<int> ();
+
+		foreach (Button bt in _btnlist) 
+		{
+			//work aroud
+			string idx = bt.name;
+			bt.onClick.AddListener(()=>betType(idx));	
+		}
+
+		
+		foreach (UI_Text text in cardlist) 
+		{
+			//work aroud
+			text.textContent = "";
+		}
+
+
+		_coinSelect = 100;
+
 
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
-		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_uuid);
+		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
 		_Connector.connect ();
@@ -107,29 +119,29 @@ public class Connect_script_DK: MonoBehaviour {
 			{
 				string card = e.pack["player_card_list"];
 				playercard = new List<string>(card.Split(','));
-				if( playercard.Count ==1)_pcard1.textContent = playercard[0];
+				if( playercard.Count ==1)cardlist[0].textContent = playercard[0];
 				if( playercard.Count ==2)
 				{
-					_pcard1.textContent = playercard[0];
-					_pcard2.textContent = playercard[1];
+					cardlist[0].textContent = playercard[0];
+					cardlist[1].textContent = playercard[1];
 				}
 
 				card = e.pack["banker_card_list"];
 				bankercard = new List<string>(card.Split(','));
-				if( bankercard.Count ==1)_bcard1.textContent = bankercard[0];				
+				if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
 				if( bankercard.Count ==2)
 				{
-					_bcard1.textContent = bankercard[0];
-					_bcard2.textContent = bankercard[1];
+					cardlist[2].textContent = bankercard[0];
+					cardlist[3].textContent = bankercard[1];
 				}
 
 				card = e.pack["river_card_list"];
 				rivercard = new List<string>(card.Split(','));
-				if( rivercard.Count ==1)_rcard1.textContent = rivercard[0];				
+				if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
 				if( rivercard.Count ==2)
 				{
-					_rcard1.textContent = rivercard[0];
-					_rcard2.textContent = rivercard[1];
+					cardlist[4].textContent = rivercard[0];
+					cardlist[5].textContent = rivercard[1];
 				}
 
 			}
@@ -173,22 +185,22 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
-				if( playercard.Count == 0)_pcard1.textContent = e.pack["card_list"];
-				if( playercard.Count == 1)_pcard2.textContent = e.pack["card_list"];
+				if( playercard.Count == 0)cardlist[0].textContent = e.pack["card_list"];
+				if( playercard.Count == 1)cardlist[1].textContent = e.pack["card_list"];
 				playercard.Add(e.pack["card_list"]);
 			}
 
 			if( cardtype == "Banker")
 			{
-				if( bankercard.Count == 0)_bcard1.textContent = e.pack["card_list"];
-				if( bankercard.Count == 1)_bcard2.textContent = e.pack["card_list"];
+				if( bankercard.Count == 0)cardlist[2].textContent = e.pack["card_list"];
+				if( bankercard.Count == 1)cardlist[3].textContent = e.pack["card_list"];
 				bankercard.Add(e.pack["card_list"]);
 			}
 
 			if( cardtype == "River")
 			{
-				if( rivercard.Count == 0)_rcard1.textContent = e.pack["card_list"];
-				if( rivercard.Count == 1)_rcard2.textContent = e.pack["card_list"];
+				if( rivercard.Count == 0)cardlist[4].textContent = e.pack["card_list"];
+				if( rivercard.Count == 1)cardlist[5].textContent = e.pack["card_list"];
 				rivercard.Add(e.pack["card_list"]);
 			}
 
@@ -207,9 +219,11 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 	}
 
-	public void newRound()
-	{
 
+
+	public void betType(string btnname)
+	{
+		Debug.Log ("btnname = "+btnname);
 	}
 
 

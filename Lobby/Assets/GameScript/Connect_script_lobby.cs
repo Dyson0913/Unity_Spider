@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 using ConnectModule;
+using GameCommon.Model;
 using GameScript.parser;
 
 public class Connect_script_lobby : MonoBehaviour {
@@ -13,11 +15,12 @@ public class Connect_script_lobby : MonoBehaviour {
 	public UI_Text _credit;
 	public UI_Text _log;
 	public avalibe _avalibelist;
-
-	public string _uuid;
+	
+	private Model _model = Model.Instance;
 
 	// Use this for initialization
 	void Start () {
+
 		_Connector = new websocketModule();
 		_Connector.parser = new lobby_parser ();
 		_Connector.create ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d");
@@ -25,6 +28,11 @@ public class Connect_script_lobby : MonoBehaviour {
 		_Connector.stateResponse += Onstate;
 
 		_Connector.connect ();
+	}
+
+	public void bet1(string btnname)
+	{
+		Debug.Log ("btnname = "+btnname);
 	}
 
 	private void Onstate(object sender,stringArgs e)
@@ -40,7 +48,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		{
 			_name.textContent = e.pack["player_name"];
 			_credit.textContent = e.pack["player_credit"];
-			_uuid = e.pack["player_uuid"];
+			_model.putValue("uuid",e.pack["player_uuid"]);
 			string s = e.pack["game_avaliable"];
 			_avalibelist.set_avalible(new List<string>(s.Split(',')));
 
@@ -77,15 +85,15 @@ public class Connect_script_lobby : MonoBehaviour {
 		//create DK link ,witch when connect ok
 		//gameObject.AddComponent<AudioSource>();
 		Application.LoadLevel("DK");
-		Invoke("DKcreate", 0.5f);
+		//Invoke("DKcreate", 0.5f);
 	}
 
 	public void DKcreate()
 	{
-		GameObject ob = new GameObject ();
-		ob.name = "DK_connector";
-		ob.AddComponent<Connect_script_DK>();
-		ob.GetComponent<Connect_script_DK>()._uuid = _uuid;
+//		GameObject ob = new GameObject ();
+//		ob.name = "DK_connector";
+//		ob.AddComponent<Connect_script_DK>();
+//		ob.GetComponent<Connect_script_DK>()._uuid = _uuid;
 	}
 
 	// Update is called once per frame

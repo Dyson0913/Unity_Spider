@@ -44,13 +44,6 @@ namespace GameScript.parser
 				pack.Add ("river_card_list", arr_parse_no_token(p.Property ("river_card_list").Value.ToString ()));
 				pack.Add ("extra_card_list", arr_parse_no_token(p.Property ("extra_card_list").Value.ToString ()));
 
-				//game_list
-//				List<string > poker = new List<string> ();
-//				poker.Add ("banker_card_list");
-//				poker.Add ("player_card_list");
-//				poker.Add ("river_card_list");
-//				poker.Add ("extra_card_list");
-//				arr_parse (pack, jo.Property ("cards_info").Value.ToString (), poker);
 
 			} else if (pack_type == "MsgBPState") {
 				pack.Add ("message_type", pack_type);
