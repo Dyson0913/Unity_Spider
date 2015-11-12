@@ -12,7 +12,6 @@ public class UI_Text : MonoBehaviour {
 	void Start () 
 	{	
 		_text = this.GetComponent<Text>();
-		textContent = "";
 		timer_call = "sub";
 	}
 	

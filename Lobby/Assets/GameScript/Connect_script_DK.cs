@@ -20,6 +20,7 @@ public class Connect_script_DK: MonoBehaviour {
 	public UI_Timer _bet_timer;
 
 
+	public List<Button> coin_list;
 	public List<UI_Text> cardlist;
 	public List<Button> _btnlist;
 
@@ -39,10 +40,10 @@ public class Connect_script_DK: MonoBehaviour {
 	private List<string> rivercard;
 
 	private List<int> betamount;
+	private string _prebtn;
 
 
-
-	public int _coinSelect;
+	public int _coinSelect = 100;
 
 
 
@@ -69,15 +70,20 @@ public class Connect_script_DK: MonoBehaviour {
 			bt.onClick.AddListener(()=>betType(idx));	
 		}
 
-		
-		foreach (UI_Text text in cardlist) 
+		foreach (Button coin in coin_list) 
 		{
 			//work aroud
-			text.textContent = "";
+			string idx = coin.name;
+			coin.onClick.AddListener(()=>coin_select(idx));	
 		}
-
-
-		_coinSelect = 100;
+		_prebtn = "";
+		
+//		foreach (UI_Text text in cardlist) 
+//		{
+//			//work aroud
+//			Debug.Log("ini ");
+//			text.textContent = "";
+//		}
 
 
 		_Connector = new websocketModule();
@@ -117,9 +123,10 @@ public class Connect_script_DK: MonoBehaviour {
 			}
 			if( openlist[1] =="1")
 			{
+
 				string card = e.pack["player_card_list"];
 				playercard = new List<string>(card.Split(','));
-				if( playercard.Count ==1)cardlist[0].textContent = playercard[0];
+				if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
 				if( playercard.Count ==2)
 				{
 					cardlist[0].textContent = playercard[0];
@@ -144,12 +151,13 @@ public class Connect_script_DK: MonoBehaviour {
 					cardlist[5].textContent = rivercard[1];
 				}
 
+				Debug.Log("pack all p= "+ e.pack["player_card_list"]);
+				Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
+				Debug.Log("pack all r= "+ e.pack["river_card_list"]);
+				Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
 			}
 
-			Debug.Log("pack all p= "+ e.pack["player_card_list"]);
-			Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
-			Debug.Log("pack all r= "+ e.pack["river_card_list"]);
-			Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
+
 		}
 		if (st == "MsgBPState") 
 		{
@@ -185,8 +193,14 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
-				if( playercard.Count == 0)cardlist[0].textContent = e.pack["card_list"];
-				if( playercard.Count == 1)cardlist[1].textContent = e.pack["card_list"];
+				if( playercard.Count == 0)
+				{
+					cardlist[0].textContent = e.pack["card_list"];
+				}
+				if( playercard.Count == 1)
+				{
+					cardlist[1].textContent = e.pack["card_list"];
+				}
 				playercard.Add(e.pack["card_list"]);
 			}
 
@@ -226,6 +240,28 @@ public class Connect_script_DK: MonoBehaviour {
 		Debug.Log ("btnname = "+btnname);
 	}
 
+	public void coin_select(string btnname)
+	{
+		if (_prebtn == btnname) {
+			Debug.Log ("coin same return");
+			return;
+		}
+
+		Button bt  = GameObject.Find (btnname).GetComponent<Button>();
+		ColorBlock co= bt.colors;
+		co.normalColor = Color.red;
+		bt.colors = co;
+		Debug.Log ("coin same to red"+ btnname);
+
+		if (_prebtn != btnname && _prebtn !="") {
+			Button pre  = GameObject.Find (_prebtn).GetComponent<Button>();
+			ColorBlock co2= pre.colors;
+			co2.normalColor = Color.white;
+			pre.colors = co2;
+			_prebtn = btnname;
+			Debug.Log ("coin same to while"+ _prebtn);
+		}
+	}
 
 
 	// Update is called once per frame
