@@ -28,15 +28,15 @@ namespace GameCommon.Model
 			_model = new Dictionary<string, string> ();
 		}
 
-		public bool putValue(string key,string value)
+		public void putValue(string key,string value)
 		{
-			if(! _model.ContainsKey(key))
-			{
-				_model.Add(key,value);
-				return true;
+			if (! _model.ContainsKey (key)) {
+				_model.Add (key, value);
 			}
-			return false;
-
+			else 
+			{
+				_model[key] = value;
+			}
 		}
 
 		public string getValue(string key)

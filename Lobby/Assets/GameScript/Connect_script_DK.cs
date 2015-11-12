@@ -42,11 +42,8 @@ public class Connect_script_DK: MonoBehaviour {
 	private List<string> bankercard;
 	private List<string> rivercard;
 
-	private List<int> betamount;
+	private List<int> zone_bet;
 	private string _prebtn;
-
-
-	public int _coinSelect = 100;
 
 
 
@@ -64,7 +61,24 @@ public class Connect_script_DK: MonoBehaviour {
 		playercard = new List<string> ();
 		bankercard = new List<string> ();
 		rivercard = new List<string> ();
-		betamount = new List<int> ();
+		zone_bet = new List<int> ();
+
+		_model.putValue ("bet_1", "BetBWPlayer");
+		_model.putValue ("bet_2", "BetBWBanker");
+		_model.putValue ("bet_3", "BetBWTiePoint");
+		_model.putValue ("bet_4", "BetBWBankerPair");
+		_model.putValue ("bet_5", "BetBWPlayerPair");
+		_model.putValue ("bet_6", "BetBWSpecial");
+
+		_model.putValue ("coin_select", "Coin_1");
+
+		_model.putValue ("Coin_1", "100");
+		_model.putValue ("Coin_2", "500");
+		_model.putValue ("Coin_3", "1000");
+		_model.putValue ("Coin_4", "5000");
+		_model.putValue ("Coin_5", "10000");
+
+
 
 		foreach (Button bt in _btnlist) 
 		{
@@ -76,8 +90,8 @@ public class Connect_script_DK: MonoBehaviour {
 		foreach (Button coin in coin_list) 
 		{
 			//work aroud
-			string idx = coin.name;
-			coin.onClick.AddListener(()=>coin_select(idx));	
+			string coin_idx = coin.name;
+			coin.onClick.AddListener(()=>coin_select(coin_idx));	
 		}
 		_prebtn = "";
 
@@ -235,8 +249,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 	public void betType(string btnname)
 	{
-		Debug.Log ("btnname = "+btnname);
-
+		Debug.Log ("value = " + _model.getValue (btnname));
 
 		JObject ob = new JObject
 		{
@@ -250,32 +263,52 @@ public class Connect_script_DK: MonoBehaviour {
 			{"bet_amount",100},
 			{"total_bet_amount",100}
 		};
-		Debug.Log ("ob = "+ob.ToString());
+		//Debug.Log ("ob = "+ob.ToString());
 
 		//_Connector.send_to_Server(ob.ToString());
 	}
 
+	public void create_betOb(string type)
+	{
+		JObject ob = new JObject
+		{
+			{ "betType",_model.getValue (type)},
+			{ "bet_idx",_model.getValue("coin_select")},
+			{"bet_amount","MsgPlayerBet"},
+			{"total_bet_amount",_model.getValue("game_id")}
+		};
+	}
+
 	public void coin_select(string btnname)
 	{
-		if (_prebtn == btnname) {
-			Debug.Log ("coin same return");
-			return;
-		}
+//		string coin_select = _model.getValue (btnname);
+//		Debug.Log ("coin = "+coin_select);
+		//Debug.Log ("btnnamed "+ btnname);
 
-		Button bt  = GameObject.Find (btnname).GetComponent<Button>();
-		ColorBlock co= bt.colors;
-		co.normalColor = Color.red;
-		bt.colors = co;
-		Debug.Log ("coin same to red"+ btnname);
+		_model.putValue("coin_select",btnname);
+		Debug.Log ("coin_select "+ _model.getValue("coin_select"));
 
-		if (_prebtn != btnname && _prebtn !="") {
-			Button pre  = GameObject.Find (_prebtn).GetComponent<Button>();
-			ColorBlock co2= pre.colors;
-			co2.normalColor = Color.white;
-			pre.colors = co2;
-			_prebtn = btnname;
-			Debug.Log ("coin same to while"+ _prebtn);
-		}
+//		if (_prebtn == btnname) {
+//			Debug.Log ("coin same return");
+//			return;
+//		} else {
+//			_prebtn = btnname;
+//		}
+//
+//		Button bt  = GameObject.Find (btnname).GetComponent<Button>();
+//		ColorBlock co= bt.colors;
+//		co.normalColor = Color.red;
+//		bt.colors = co;
+//		Debug.Log ("coin same to red "+ btnname);
+//
+//		if ( (_prebtn != btnname) && (_prebtn !="")) {
+//			Button pre  = GameObject.Find (_prebtn).GetComponent<Button>();
+//			ColorBlock co2= pre.colors;
+//			co2.normalColor = Color.white;
+//			pre.colors = co2;
+//			_prebtn = btnname;
+//			Debug.Log ("coin same to while"+ _prebtn);
+//		}
 	}
 
 
