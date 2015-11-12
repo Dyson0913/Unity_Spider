@@ -35,6 +35,9 @@ public class Connect_script_DK: MonoBehaviour {
 	private string _gameround;
 	private string _gameid;
 
+	List<string> playercard;
+	List<string> bankercard;
+	List<string> rivercard;
 
 	public string _uuid;
 
@@ -46,13 +49,19 @@ public class Connect_script_DK: MonoBehaviour {
 		_ui_gameround = GameObject.Find ("gameround").GetComponent<UI_Text>();
 
 		_pcard1 = GameObject.Find ("Card_Text_1").GetComponent<UI_Text>();
+		_pcard2 = GameObject.Find ("Card_Text_2").GetComponent<UI_Text>();
 		_bcard1 = GameObject.Find ("Card_Text_3").GetComponent<UI_Text>();
+		_bcard2 = GameObject.Find ("Card_Text_4").GetComponent<UI_Text>();
 		_rcard1 = GameObject.Find ("Card_Text_5").GetComponent<UI_Text>();
+		_rcard2 = GameObject.Find ("Card_Text_6").GetComponent<UI_Text>();
 
 		_avalibelist = GameObject.Find ("avalibe_DK").GetComponent<avalibe>();
 		_state_m = new StateMachine ();
 		_state_m.state = "None";
 
+		playercard = new List<string> ();
+		bankercard = new List<string> ();
+		rivercard = new List<string> ();
 //		List<string> openlist = new List<string> ();
 //		openlist.Add ("0");
 //		openlist.Add ("0");
@@ -94,7 +103,36 @@ public class Connect_script_DK: MonoBehaviour {
 				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
 				//_bet_timer.
 			}
-			Debug.Log("pack all suc= "+ e.pack["pcard"]);
+			if( openlist[1] =="1")
+			{
+				string card = e.pack["player_card_list"];
+				playercard = new List<string>(card.Split(','));
+				if( playercard.Count ==1)_pcard1.textContent = playercard[0];
+				if( playercard.Count ==2)
+				{
+					_pcard1.textContent = playercard[0];
+					_pcard2.textContent = playercard[1];
+				}
+
+				card = e.pack["banker_card_list"];
+				bankercard = new List<string>(card.Split(','));
+				if( bankercard.Count ==1)_bcard1.textContent = bankercard[0];				
+				if( bankercard.Count ==2)
+				{
+					_bcard1.textContent = bankercard[0];
+					_bcard2.textContent = bankercard[1];
+				}
+
+				card = e.pack["river_card_list"];
+				rivercard = new List<string>(card.Split(','));
+				if( rivercard.Count ==1)_rcard1.textContent = rivercard[0];				
+				if( rivercard.Count ==2)
+				{
+					_rcard1.textContent = rivercard[0];
+					_rcard2.textContent = rivercard[1];
+				}
+
+			}
 
 			Debug.Log("pack all p= "+ e.pack["player_card_list"]);
 			Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
@@ -135,17 +173,23 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
-				_pcard1.textContent = e.pack["card_list"];
+				if( playercard.Count == 0)_pcard1.textContent = e.pack["card_list"];
+				if( playercard.Count == 1)_pcard2.textContent = e.pack["card_list"];
+				playercard.Add(e.pack["card_list"]);
 			}
 
 			if( cardtype == "Banker")
 			{
-				_bcard1.textContent = e.pack["card_list"];
+				if( bankercard.Count == 0)_bcard1.textContent = e.pack["card_list"];
+				if( bankercard.Count == 1)_bcard2.textContent = e.pack["card_list"];
+				bankercard.Add(e.pack["card_list"]);
 			}
 
 			if( cardtype == "River")
 			{
-				_rcard1.textContent = e.pack["card_list"];
+				if( rivercard.Count == 0)_rcard1.textContent = e.pack["card_list"];
+				if( rivercard.Count == 1)_rcard2.textContent = e.pack["card_list"];
+				rivercard.Add(e.pack["card_list"]);
 			}
 
 		}
