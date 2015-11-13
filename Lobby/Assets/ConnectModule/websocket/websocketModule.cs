@@ -54,7 +54,7 @@ namespace ConnectModule
 
 		public override void send_to_Server(string jsonString)
 		{
-			_ws.Send (jsonString);	
+			_ws.Send (jsonString);
 		}
 
 		private void OnOpen(object sender,EventArgs e)

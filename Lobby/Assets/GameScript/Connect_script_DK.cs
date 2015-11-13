@@ -36,6 +36,8 @@ public class Connect_script_DK: MonoBehaviour {
 
 	//data 
 	private Model _model = Model.Instance;
+	private Model_bet _bet_model;
+
 	private string _state;
 
 	private List<string> playercard;
@@ -63,21 +65,9 @@ public class Connect_script_DK: MonoBehaviour {
 		rivercard = new List<string> ();
 		zone_bet = new List<int> ();
 
-		_model.putValue ("bet_1", "BetBWPlayer");
-		_model.putValue ("bet_2", "BetBWBanker");
-		_model.putValue ("bet_3", "BetBWTiePoint");
-		_model.putValue ("bet_4", "BetBWBankerPair");
-		_model.putValue ("bet_5", "BetBWPlayerPair");
-		_model.putValue ("bet_6", "BetBWSpecial");
+		_bet_model = new DK_bet ();
 
 		_model.putValue ("coin_select", "Coin_1");
-
-		_model.putValue ("Coin_1", "100");
-		_model.putValue ("Coin_2", "500");
-		_model.putValue ("Coin_3", "1000");
-		_model.putValue ("Coin_4", "5000");
-		_model.putValue ("Coin_5", "10000");
-
 
 
 		foreach (Button bt in _btnlist) 
@@ -231,6 +221,15 @@ public class Connect_script_DK: MonoBehaviour {
 			}
 
 		}
+
+		if (st == "MsgPlayerBet") 
+		{
+			if( e.pack["result"] == "0")
+			{
+				string s = _bet_model.bet_ok();
+				Debug.Log("bet ok = "+ s);
+			}
+		}
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
@@ -249,34 +248,31 @@ public class Connect_script_DK: MonoBehaviour {
 
 	public void betType(string btnname)
 	{
-		Debug.Log ("value = " + _model.getValue (btnname));
+		Debug.Log ("value = " +btnname);
+		JObject bet=  _bet_model.add_bet (btnname);
+		Debug.Log ("ob = "+bet.ToString());
 
-		JObject ob = new JObject
-		{
-			{ "id",_model.getValue("uuid")},
-			{ "timestamp",1111},
-			{"message_type","MsgPlayerBet"},
-			{"game_id",_model.getValue("game_id")},
-			{"game_type",_model.getValue("game_type")},
-			{"game_round",_model.getValue("game_round")},
-			{"bet_type", "BetBWPlayer"},
-			{"bet_amount",100},
-			{"total_bet_amount",100}
-		};
+		string s = _bet_model.bet_ok();
+		Debug.Log("bet ok = "+ s);
+
+		//coin update
+		bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
+		
+		//		JObject ob = new JObject
+//		{
+//			{ "id",_model.getValue("uuid")},
+//			{ "timestamp",1111},
+//			{"message_type","MsgPlayerBet"},
+//			{"game_id",_model.getValue("game_id")},
+//			{"game_type",_model.getValue("game_type")},
+//			{"game_round",_model.getValue("game_round")},
+//			{"bet_type", "BetBWPlayer"},
+//			{"bet_amount",100},
+//			{"total_bet_amount",100}
+//		};
 		//Debug.Log ("ob = "+ob.ToString());
 
 		//_Connector.send_to_Server(ob.ToString());
-	}
-
-	public void create_betOb(string type)
-	{
-		JObject ob = new JObject
-		{
-			{ "betType",_model.getValue (type)},
-			{ "bet_idx",_model.getValue("coin_select")},
-			{"bet_amount","MsgPlayerBet"},
-			{"total_bet_amount",_model.getValue("game_id")}
-		};
 	}
 
 	public void coin_select(string btnname)
@@ -288,7 +284,8 @@ public class Connect_script_DK: MonoBehaviour {
 		_model.putValue("coin_select",btnname);
 		Debug.Log ("coin_select "+ _model.getValue("coin_select"));
 
-//		if (_prebtn == btnname) {
+
+		//		if (_prebtn == btnname) {
 //			Debug.Log ("coin same return");
 //			return;
 //		} else {
