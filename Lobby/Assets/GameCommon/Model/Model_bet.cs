@@ -28,8 +28,9 @@ namespace GameCommon.Model
 		private Model _model = Model.Instance;
 
 		public Dictionary<string,string> zone_mapping;
-		public Dictionary<string,int> zone_idx_mapping;
 		public Dictionary<string,int> coin_list;
+		public Dictionary<string,int> zone_idx_mapping;
+		public Dictionary<string,string> zone_displayname_mapping;
 
 		public Dictionary<string,List<JObject>> zone_bet;
 		public List<JObject> queue;
@@ -38,6 +39,7 @@ namespace GameCommon.Model
 		{
 			zone_mapping = new Dictionary<string, string> ();
 			zone_idx_mapping = new Dictionary<string, int> ();
+			zone_displayname_mapping = new Dictionary<string, string> ();
 			coin_list = new Dictionary<string, int> ();
 			queue = new List<JObject> ();
 
@@ -90,8 +92,7 @@ namespace GameCommon.Model
 			JObject bet = queue [0];
 			queue.RemoveAt (0);
 			string type = bet["betType"].ToString();
-			string amount = bet ["bet_amount"].ToString ();
-			//return s +" "+ amount;
+
 
 			if (!zone_bet.ContainsKey (type)) {
 
@@ -114,11 +115,29 @@ namespace GameCommon.Model
 
 		}
 
+		public void clean_bet()
+		{
+			zone_bet.Clear ();
+
+		}
+
 		public int zone_idx(string type)
 		{
 			if (!zone_idx_mapping.ContainsKey (type))
 				return -1;
 			return zone_idx_mapping[type];
+		}
+
+		public string display_name(string type)
+		{
+			if (!zone_displayname_mapping.ContainsKey (type))
+				return "";
+			return zone_displayname_mapping [type];
+		}
+
+		public int coin_value(string coinType)
+		{
+			return coin_list[coinType];
 		}
 
 	}

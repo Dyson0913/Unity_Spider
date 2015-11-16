@@ -7,17 +7,23 @@ public class UI_Text : MonoBehaviour {
 	public Text _text {get; set; }
 	public string textContent{ get; set; }
 
-	public string timer_call;
+	public bool countDown{ get; set; }
 	// Use this for initialization
 	void Start () 
 	{	
 		_text = this.GetComponent<Text>();
-		timer_call = "sub";
+		countDown = false;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		_text.text = textContent;
+
+		if( countDown)
+		{
+			countDown = false;
+			count_douwn();
+		}
 	}
 
 	public void count_douwn()

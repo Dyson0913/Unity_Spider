@@ -28,6 +28,9 @@ public class Connect_script_DK: MonoBehaviour {
 	public List<Button> coin_list;
 	public List<UI_Text> cardlist;
 	public List<Button> _btnlist;
+	public List<UI_Text> _result_bet_zone;
+	public List<UI_Text> _result_bet_amount;
+	public List<UI_Text> _result_settle_amount;
 
 	//delegate
 	public avalibe _avalibelist;
@@ -100,7 +103,7 @@ public class Connect_script_DK: MonoBehaviour {
 		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
-		//_Connector.connect ();
+		_Connector.connect ();
 	}
 
 	private void Onstate(object sender,stringArgs e)
@@ -126,8 +129,9 @@ public class Connect_script_DK: MonoBehaviour {
 				_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 
 				//timer
+				Debug.Log("remain = "+e.pack["remain_time"]);
 				_bet_timer.textContent = e.pack["remain_time"];
-				_bet_timer.count_douwn();
+				_bet_timer.countDown = true;
 			}
 
 			if( openlist[1] =="1")
@@ -185,6 +189,21 @@ public class Connect_script_DK: MonoBehaviour {
 				//timer
 				//_bet_timer.excute();
 				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
+
+				playercard.Clear();
+				bankercard.Clear();
+				rivercard.Clear();
+
+				for( int i=0;i<bet_amount_list.Count;i++)
+				{
+					bet_amount_list[i].textContent = "";
+				}
+
+				for( int i=0;i<cardlist.Count;i++)
+				{
+					cardlist[i].textContent = "";
+				}
+
 			}
 
 		}
@@ -227,16 +246,33 @@ public class Connect_script_DK: MonoBehaviour {
 			if( e.pack["result"] == "0")
 			{
 				string s = _bet_model.bet_ok();
+
 				Debug.Log("bet ok = "+ s);
+				string btnname = _model.getValue ("last_btn");
+				bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
 			}
 		}
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = _state;
-			Debug.Log("carty = "+e.pack["bet_type"]);
+			Debug.Log("carty bet_type= "+e.pack["bet_type"]);
+			Debug.Log("carty settle_amount= "+e.pack["settle_amount"]);
+			Debug.Log("carty odds= "+e.pack["odds"]);
+			Debug.Log("carty win_state= "+e.pack["win_state"]);
+			Debug.Log("carty bet_amount= "+e.pack["bet_amount"]);
 			List<string> openlist = _state_m.stateupdate(_state);
 			_avalibelist.set_avalible(openlist);
+
+			List<string> name  = new List<string>(e.pack["bet_type"].ToString().Split(','));
+			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
+			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
+			for(int i=0;i< _result_bet_zone.Count;i++)
+			{
+				_result_bet_zone[i].textContent = _bet_model.display_name(name[i]);
+				_result_bet_amount[i].textContent = bet_amount[i];
+				_result_settle_amount[i].textContent = settle[i];
+			}
 		}
 		if (st == "check") 
 		{
@@ -250,29 +286,30 @@ public class Connect_script_DK: MonoBehaviour {
 	{
 		Debug.Log ("value = " +btnname);
 		JObject bet=  _bet_model.add_bet (btnname);
-		Debug.Log ("ob = "+bet.ToString());
+		//Debug.Log ("ob = "+bet.ToString());
+		_model.putValue ("last_btn", btnname);
 
-		string s = _bet_model.bet_ok();
-		Debug.Log("bet ok = "+ s);
-
+		//test
+		//string s = _bet_model.bet_ok();
+		//Debug.Log("bet ok = "+ s);
 		//coin update
-		bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
+		//bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
 		
-		//		JObject ob = new JObject
-//		{
-//			{ "id",_model.getValue("uuid")},
-//			{ "timestamp",1111},
-//			{"message_type","MsgPlayerBet"},
-//			{"game_id",_model.getValue("game_id")},
-//			{"game_type",_model.getValue("game_type")},
-//			{"game_round",_model.getValue("game_round")},
-//			{"bet_type", "BetBWPlayer"},
-//			{"bet_amount",100},
-//			{"total_bet_amount",100}
-//		};
-		//Debug.Log ("ob = "+ob.ToString());
+		JObject ob = new JObject
+		{
+			{ "id",_model.getValue("uuid")},
+			{ "timestamp",1111},
+			{"message_type","MsgPlayerBet"},
+			{"game_id",_model.getValue("game_id")},
+			{"game_type",_model.getValue("game_type")},
+			{"game_round",_model.getValue("game_round")},
+			{"bet_type", bet["betType"]},
+			{"bet_amount",_bet_model.coin_value(bet["bet_amount"].ToString())},
+			{"total_bet_amount",bet["total_bet_amount"]}
+		};
+		Debug.Log ("ob = "+ob.ToString());
 
-		//_Connector.send_to_Server(ob.ToString());
+		_Connector.send_to_Server(ob.ToString());
 	}
 
 	public void coin_select(string btnname)

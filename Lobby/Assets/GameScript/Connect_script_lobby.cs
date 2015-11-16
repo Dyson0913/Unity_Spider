@@ -37,7 +37,7 @@ public class Connect_script_lobby : MonoBehaviour {
 
 	private void Onstate(object sender,stringArgs e)
 	{
-		Debug.Log("Onstate = "+ e.msg);
+		Debug.Log("Lobby Onstate = "+ e.msg);
 	}
 
 	private void OnMessage(object sender,packArgs e)
