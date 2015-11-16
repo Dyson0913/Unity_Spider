@@ -50,6 +50,7 @@ public class Connect_script_DK: MonoBehaviour {
 	private List<int> zone_bet;
 	private string _prebtn;
 
+	public Dictionary<string,string> state_mapping;
 
 
 	// Use this for initialization
@@ -72,6 +73,11 @@ public class Connect_script_DK: MonoBehaviour {
 
 		_model.putValue ("coin_select", "Coin_1");
 
+		state_mapping = new Dictionary<string, string> ();
+		state_mapping.Add ("NewRoundState", "請開始下注");
+		state_mapping.Add ("EndBetState", "請停止下注");
+		state_mapping.Add ("OpenState", "開牌中");
+		state_mapping.Add ("EndRoundState", "結算中");
 
 		foreach (Button bt in _btnlist) 
 		{
@@ -106,6 +112,13 @@ public class Connect_script_DK: MonoBehaviour {
 		_Connector.connect ();
 	}
 
+	public string state_str(string state)
+	{
+		if (!state_mapping.ContainsKey (state))
+			return "";
+		return state_mapping [state];
+	}
+
 	private void Onstate(object sender,stringArgs e)
 	{
 		Debug.Log("DK Onstate = "+ e.msg);
@@ -117,7 +130,7 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = _state;
+			_log.textContent = state_str(_state);
 			List<string> openlist = _state_m.stateupdate(_state);
 			_avalibelist.set_avalible(openlist);
 
@@ -175,20 +188,23 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPState") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = _state;
+			_log.textContent = state_str(_state);
 			List<string> openlist = _state_m.stateupdate(_state);
 			if( openlist !=null)
 			{
 				_avalibelist.set_avalible(openlist);
 			}
 
+			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 			if( openlist[0] =="1")
 			{
-				_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 
+				_bet_timer.textContent = e.pack["remain_time"];
+				_bet_timer.countDown = true;
 				//timer
 				//_bet_timer.excute();
 				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
+				Debug.Log("clen bet ="+ _bet_model.clean_bet());
 
 				playercard.Clear();
 				bankercard.Clear();
@@ -210,7 +226,7 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPOpenCard") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = _state;
+			_log.textContent = state_str(_state);
 
 			List<string> openlist = _state_m.stateupdate(_state);
 			if( openlist !=null) _avalibelist.set_avalible(openlist);
@@ -255,7 +271,7 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = _state;
+			_log.textContent = state_str(_state);
 			Debug.Log("carty bet_type= "+e.pack["bet_type"]);
 			Debug.Log("carty settle_amount= "+e.pack["settle_amount"]);
 			Debug.Log("carty odds= "+e.pack["odds"]);

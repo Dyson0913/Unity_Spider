@@ -115,9 +115,10 @@ namespace GameCommon.Model
 
 		}
 
-		public void clean_bet()
+		public string clean_bet()
 		{
 			zone_bet.Clear ();
+			return zone_bet.Count.ToString();
 
 		}
 

@@ -51,6 +51,7 @@ namespace GameScript.parser
 				pack.Add ("message_type", pack_type);
 				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
 				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
+				pack.Add ("remain_time", jo.Property ("remain_time").Value.ToString ());
 			} else if (pack_type == "MsgBPOpenCard") {
 				pack.Add ("message_type", pack_type);
 				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
