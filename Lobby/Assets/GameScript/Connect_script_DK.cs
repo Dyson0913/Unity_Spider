@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 
@@ -79,6 +80,10 @@ public class Connect_script_DK: MonoBehaviour {
 		state_mapping.Add ("OpenState", "開牌中");
 		state_mapping.Add ("EndRoundState", "結算中");
 
+		ColorBlock co= coin_list[0].colors;
+		co.normalColor = Color.red;
+		coin_list[0].colors = co;
+
 		foreach (Button bt in _btnlist) 
 		{
 			//work aroud
@@ -86,11 +91,17 @@ public class Connect_script_DK: MonoBehaviour {
 			bt.onClick.AddListener(()=>betType(idx));	
 		}
 
-		foreach (Button coin in coin_list) 
-		{
-			//work aroud
-			string coin_idx = coin.name;
-			coin.onClick.AddListener(()=>coin_select(coin_idx));	
+//		foreach (Button coin in coin_list) 
+//		{
+//			//work aroud
+//			string coin_idx = coin.name;
+//			coin.onClick.AddListener(()=>coin_select(idx));	
+//		}
+		for (int i=0; i< coin_list.Count; i++) {
+			//string coin_idx = coin_list[i].name;
+			string idx =i.ToString();
+			coin_list[i].onClick.AddListener(()=>coin_select(idx));
+
 		}
 		_prebtn = "";
 
@@ -111,7 +122,7 @@ public class Connect_script_DK: MonoBehaviour {
 		_Connector.stateResponse += Onstate;
 		_Connector.connect ();
 	}
-
+	
 	public string state_str(string state)
 	{
 		if (!state_mapping.ContainsKey (state))
@@ -328,39 +339,70 @@ public class Connect_script_DK: MonoBehaviour {
 		_Connector.send_to_Server(ob.ToString());
 	}
 
-	public void coin_select(string btnname)
+	public void coin_select(string idx)
 	{
-//		string coin_select = _model.getValue (btnname);
-//		Debug.Log ("coin = "+coin_select);
-		//Debug.Log ("btnnamed "+ btnname);
-
+		string btnname = "Coin_"+ (Int32.Parse(idx)+1);
+		Debug.Log ("btnnamed "+ btnname);
+		//return;
 		_model.putValue("coin_select",btnname);
 		Debug.Log ("coin_select "+ _model.getValue("coin_select"));
 
 
-		//		if (_prebtn == btnname) {
-//			Debug.Log ("coin same return");
-//			return;
-//		} else {
-//			_prebtn = btnname;
-//		}
-//
+		if (_prebtn == btnname) {
+			Debug.Log ("coin same return");
+			return;
+		}
+
+		//why not working
 //		Button bt  = GameObject.Find (btnname).GetComponent<Button>();
 //		ColorBlock co= bt.colors;
 //		co.normalColor = Color.red;
 //		bt.colors = co;
-//		Debug.Log ("coin same to red "+ btnname);
-//
+//		int id = Int32.Parse (btnname);
+//		ColorBlock co= coin_list[id].colors;
+//		co.normalColor = Color.red;
+//		coin_list[id].colors = co;
+
+		Debug.Log ("coin same to red "+ btnname);
+
 //		if ( (_prebtn != btnname) && (_prebtn !="")) {
-//			Button pre  = GameObject.Find (_prebtn).GetComponent<Button>();
-//			ColorBlock co2= pre.colors;
-//			co2.normalColor = Color.white;
-//			pre.colors = co2;
-//			_prebtn = btnname;
-//			Debug.Log ("coin same to while"+ _prebtn);
+////			int id2 = Int32.Parse (_prebtn);
+////			ColorBlock co2= coin_list[id].colors;
+////			co2.normalColor = Color.white;
+////			coin_list[id2].colors = co2;
+//
+//			Button bt2  = GameObject.Find (_prebtn).GetComponent<Button>();
+//			ColorBlock co2= bt2.colors;
+//			co2.normalColor = Color.red;
+//			bt2.colors = co2;
+//
+//			Debug.Log ("coin same to while ="+ _prebtn);
 //		}
+
+		_prebtn = btnname;
+		color (idx);
+
 	}
 
+	public void color(string idx)
+	{
+		for (int i=0; i< coin_list.Count; i++) {
+			ColorBlock co = coin_list[i].colors;
+			
+			if( i == (Int32.Parse(idx)))
+			{
+				Debug.Log("i = "+ idx);
+				co.normalColor = Color.red;
+				co.highlightedColor = Color.red;
+			}
+			else
+			{
+				co.normalColor = Color.white;
+				co.highlightedColor = Color.white;
+			}
+			coin_list[i].colors = co;
+		}
+	}
 
 	// Update is called once per frame
 	void Update () {
