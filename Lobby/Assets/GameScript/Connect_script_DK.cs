@@ -112,9 +112,6 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 
 
-		_bet_timer.textContent = "10";
-		_bet_timer.count_douwn();
-
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
 		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));
@@ -148,9 +145,10 @@ public class Connect_script_DK: MonoBehaviour {
 			_model.putValue("game_id",e.pack["game_id"]);
 			_model.putValue("game_type",e.pack["game_type"]);
 			_model.putValue("game_round",e.pack["game_round"]);
+			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 			if( openlist[0] =="1")
 			{
-				_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
+
 
 				//timer
 				Debug.Log("remain = "+e.pack["remain_time"]);
@@ -162,30 +160,40 @@ public class Connect_script_DK: MonoBehaviour {
 			{
 
 				string card = e.pack["player_card_list"];
-				playercard = new List<string>(card.Split(','));
-				if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
-				if( playercard.Count ==2)
+				if( card !="")
 				{
-					cardlist[0].textContent = playercard[0];
-					cardlist[1].textContent = playercard[1];
+					playercard = new List<string>(card.Split(','));
+					if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
+					if( playercard.Count ==2)
+					{
+						cardlist[0].textContent = playercard[0];
+						cardlist[1].textContent = playercard[1];
+					}
 				}
 
 				card = e.pack["banker_card_list"];
-				bankercard = new List<string>(card.Split(','));
-				if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
-				if( bankercard.Count ==2)
+				if( card !="")
 				{
-					cardlist[2].textContent = bankercard[0];
-					cardlist[3].textContent = bankercard[1];
+					bankercard = new List<string>(card.Split(','));
+					if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
+					if( bankercard.Count ==2)
+					{
+						cardlist[2].textContent = bankercard[0];
+						cardlist[3].textContent = bankercard[1];
+					}
 				}
 
 				card = e.pack["river_card_list"];
-				rivercard = new List<string>(card.Split(','));
-				if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
-				if( rivercard.Count ==2)
+				if( card !="")
 				{
-					cardlist[4].textContent = rivercard[0];
-					cardlist[5].textContent = rivercard[1];
+					rivercard = new List<string>(card.Split(','));
+					Debug.Log("ini r card= "+ rivercard.Count );
+					if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
+					if( rivercard.Count ==2)
+					{
+						cardlist[4].textContent = rivercard[0];
+						cardlist[5].textContent = rivercard[1];
+					}
 				}
 
 				Debug.Log("pack all p= "+ e.pack["player_card_list"]);
@@ -206,6 +214,7 @@ public class Connect_script_DK: MonoBehaviour {
 				_avalibelist.set_avalible(openlist);
 			}
 
+			_model.putValue("game_round",e.pack["game_round"]);
 			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 			if( openlist[0] =="1")
 			{
@@ -247,6 +256,7 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
+				Debug.Log("playercard len =" + playercard.Count );
 				if( playercard.Count == 0)cardlist[0].textContent = e.pack["card_list"];
 				if( playercard.Count == 1)cardlist[1].textContent = e.pack["card_list"];
 				playercard.Add(e.pack["card_list"]);
@@ -254,6 +264,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 			if( cardtype == "Banker")
 			{
+				Debug.Log("bankercard len =" + bankercard.Count );
 				if( bankercard.Count == 0)cardlist[2].textContent = e.pack["card_list"];
 				if( bankercard.Count == 1)cardlist[3].textContent = e.pack["card_list"];
 				bankercard.Add(e.pack["card_list"]);
@@ -261,6 +272,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 			if( cardtype == "River")
 			{
+				Debug.Log("rivercard len =" + rivercard.Count );
 				if( rivercard.Count == 0)cardlist[4].textContent = e.pack["card_list"];
 				if( rivercard.Count == 1)cardlist[5].textContent = e.pack["card_list"];
 				rivercard.Add(e.pack["card_list"]);
