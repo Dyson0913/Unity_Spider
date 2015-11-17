@@ -148,8 +148,6 @@ public class Connect_script_DK: MonoBehaviour {
 			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
 			if( openlist[0] =="1")
 			{
-
-
 				//timer
 				Debug.Log("remain = "+e.pack["remain_time"]);
 				_bet_timer.textContent = e.pack["remain_time"];
