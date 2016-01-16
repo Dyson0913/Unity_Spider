@@ -3,9 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
+using Facebook.Unity;
+using Facebook.MiniJSON;
+
 using ConnectModule;
 using GameCommon.Model;
 using GameScript.parser;
+
+
+
 
 public class Connect_script_lobby : MonoBehaviour {
 
@@ -15,25 +21,28 @@ public class Connect_script_lobby : MonoBehaviour {
 	public UI_Text _credit;
 	public UI_Text _log;
 	public avalibe _avalibelist;
+
+	private permission_handler _permission_handler;
 	
 	private Model _model = Model.Instance;
-
+	
 	// Use this for initialization
 	void Start () {
+		
 
+	}
+
+	private void login()
+	{
 		_Connector = new websocketModule();
 		_Connector.parser = new lobby_parser ();
 		_Connector.create ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d");
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
-
+		
 		_Connector.connect ();
 	}
 
-	public void bet1(string btnname)
-	{
-		Debug.Log ("btnname = "+btnname);
-	}
 
 	private void Onstate(object sender,stringArgs e)
 	{
@@ -45,7 +54,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		//Debug.Log ("Lobby message = " + e.pack ["message_type"]);
 		string state = e.pack ["message_type"];
 		if (state == "MsgLogin") {
-			_name.textContent = e.pack ["player_name"];
+			//_name.textContent = e.pack ["player_name"];
 			_credit.textContent = e.pack ["player_credit"];
 			_model.putValue ("uuid", e.pack ["player_uuid"]);
 			string s = e.pack ["game_avaliable"];
@@ -64,10 +73,15 @@ public class Connect_script_lobby : MonoBehaviour {
 		}
 	}
 
+	public void Log(string log)
+	{
+		_log.textContent =log;
+	}
+
 	public void click1()
 	{
 		Debug.Log ("click1");	
-		_log.textContent = "clieck1";
+
 	}
 
 	public void click2()
@@ -87,6 +101,46 @@ public class Connect_script_lobby : MonoBehaviour {
 		//gameObject.AddComponent<AudioSource>();
 		Application.LoadLevel("DK");
 		//Invoke("DKcreate", 0.5f);
+	}
+
+	public void click_Fb_login()
+	{
+		FB.Init (this.OnInitComplete, this.OnHideUnity);
+
+	}
+
+	private void OnInitComplete()
+	{
+		string logMessage = string.Format(
+			"OnInitCompleteCalled IsLoggedIn='{0}' IsInitialized='{1}'",
+			FB.IsLoggedIn,
+			FB.IsInitialized);
+		LogView.AddLog(logMessage);
+
+		//登入流程
+		this.CallFBLogin ();
+	}
+
+	private void CallFBLogin()
+	{
+		_permission_handler = new permission_handler ();
+		_permission_handler.call_back = this.Fb_data_ok;
+		FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, _permission_handler.result_handle);
+	}
+
+	private void Fb_data_ok (params object[] args)
+	{
+		LogView.AddLog("Fb_data_ok");
+		_name.textContent = args[0].ToString();
+
+		this.login();
+	}
+
+	private void OnHideUnity(bool isGameShown)
+	{
+		//this.Status = "Success - Check logk for details";
+		//this.LastResponse = string.Format("Success Response: OnHideUnity Called {0}\n", isGameShown);
+		//LogView.AddLog("Is game shown: " + isGameShown);
 	}
 
 	public void DKcreate()
