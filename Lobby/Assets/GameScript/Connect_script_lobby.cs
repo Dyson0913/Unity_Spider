@@ -118,7 +118,9 @@ public class Connect_script_lobby : MonoBehaviour {
 		LogView.AddLog(logMessage);
 
 		//登入流程
-		this.CallFBLogin ();
+		//if (!FB.IsLoggedIn) {
+			this.CallFBLogin ();
+		//}
 	}
 
 	private void CallFBLogin()
