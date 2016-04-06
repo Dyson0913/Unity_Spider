@@ -9,7 +9,7 @@ using Facebook.MiniJSON;
 using ConnectModule;
 using GameCommon.Model;
 using GameScript.parser;
-
+using ProgressBar;
 
 
 
@@ -21,6 +21,7 @@ public class Connect_script_lobby : MonoBehaviour {
 	public UI_Text _credit;
 	public UI_Text _log;
 	public avalibe _avalibelist;
+	public ProgressRadialBehaviour _progressbar;
 
 	private permission_handler _permission_handler;
 	
@@ -28,9 +29,11 @@ public class Connect_script_lobby : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
-		
 
+		this.login ();
 	}
+
+
 
 	private void login()
 	{
@@ -46,6 +49,7 @@ public class Connect_script_lobby : MonoBehaviour {
 
 	private void Onstate(object sender,stringArgs e)
 	{
+		_progressbar.Value = 100;
 		Debug.Log("Lobby Onstate = "+ e.msg);
 	}
 
@@ -54,7 +58,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		//Debug.Log ("Lobby message = " + e.pack ["message_type"]);
 		string state = e.pack ["message_type"];
 		if (state == "MsgLogin") {
-			//_name.textContent = e.pack ["player_name"];
+			_name.textContent = e.pack ["player_name"];
 			_credit.textContent = e.pack ["player_credit"];
 			_model.putValue ("uuid", e.pack ["player_uuid"]);
 			string s = e.pack ["game_avaliable"];
@@ -97,10 +101,14 @@ public class Connect_script_lobby : MonoBehaviour {
 		string s = "0,0,0,0";
 		_avalibelist.set_avalible(new List<string>(s.Split(',')));
 
-		//create DK link ,witch when connect ok
-		//gameObject.AddComponent<AudioSource>();
 		Application.LoadLevel("DK");
 		//Invoke("DKcreate", 0.5f);
+	}
+
+	public void loading_down()
+	{
+		Debug.Log ("loading_down");
+		_progressbar.gameObject.SetActive (false);
 	}
 
 	public void click_Fb_login()
@@ -145,13 +153,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		//LogView.AddLog("Is game shown: " + isGameShown);
 	}
 
-	public void DKcreate()
-	{
-//		GameObject ob = new GameObject ();
-//		ob.name = "DK_connector";
-//		ob.AddComponent<Connect_script_DK>();
-//		ob.GetComponent<Connect_script_DK>()._uuid = _uuid;
-	}
+
 
 	// Update is called once per frame
 	void Update () {
@@ -161,6 +163,11 @@ public class Connect_script_lobby : MonoBehaviour {
 		{
 			Application.Quit();
 		}
+
+		if (!_progressbar.isDone) {
+			_progressbar.Value = _progressbar.Value + 1;
+			Debug.Log ("new value: " + _progressbar.Value);
+		} 
 	}
 
 	void OnDestroy() {
