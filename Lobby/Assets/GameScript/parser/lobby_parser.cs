@@ -25,6 +25,13 @@ namespace GameScript.parser
 			Dictionary<string,string> pack = new Dictionary<string,string> ();
 			string pack_type = jo.Property ("message_type").Value.ToString ();
 
+			//TODO game msg send to here later version
+			// game_type == game ,pass to game
+			//if (pack_type == "MsgBPInitialInfo") {
+			//	pack.Add ("message_type", pack_type);
+			//	pack.Add ("game_type", "game");
+			//}
+
 			if (pack_type == "MsgLogin")
 			{
 				pack.Add ("message_type", pack_type);

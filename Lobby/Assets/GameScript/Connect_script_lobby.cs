@@ -23,17 +23,34 @@ public class Connect_script_lobby : MonoBehaviour {
 	public avalibe _avalibelist;
 	public ProgressRadialBehaviour _progressbar;
 
+	public GameObject _bg;
+	private Sprite _mybg;
+
+	public List<Button> _gameIcon;
+	public List<Sprite> _bglist;
+	public UI_Enable _shareitem;
+
+	public Connect_script_DK _dk_proxy;
+
 	private permission_handler _permission_handler;
-	
+
+
 	private Model _model = Model.Instance;
 	
 	// Use this for initialization
 	void Start () {
 
+		_shareitem.item_init ();
+
+		foreach (Button bt in _gameIcon) 
+		{
+			//work aroud
+			string idx = bt.name;
+			bt.onClick.AddListener(()=>IconClick(idx));	
+		}
+
 		this.login ();
 	}
-
-
 
 	private void login()
 	{
@@ -62,6 +79,8 @@ public class Connect_script_lobby : MonoBehaviour {
 			_credit.textContent = e.pack ["player_credit"];
 			_model.putValue ("uuid", e.pack ["player_uuid"]);
 			string s = e.pack ["game_avaliable"];
+			_model.putValue ("game_list", s);
+
 			_avalibelist.set_avalible (new List<string> (s.Split (',')));
 
 		} else if (state == "MsgKeepLive") {
@@ -75,6 +94,17 @@ public class Connect_script_lobby : MonoBehaviour {
 		{
 			Debug.Log("pack all = "+ e.pack["_all"]);
 		}
+
+		//TODO game msg send to here later version
+		// game_type == game ,pass to game
+		//if (e.pack ["message_type"] == "MsgBPInitialInfo") {
+		//	 if (e.pack["game_type"] =="pa") {
+
+		//	}
+		//	if (e.pack["game_type"] =="pa"){
+
+		//	}
+		//}
 	}
 
 	public void Log(string log)
@@ -82,33 +112,105 @@ public class Connect_script_lobby : MonoBehaviour {
 		_log.textContent =log;
 	}
 
-	public void click1()
+	private void map_bg(string game_game)
 	{
-		Debug.Log ("click1");	
+		if (game_game == "pa") {
+			_mybg = _bglist [2];
+		} else if (game_game == "dk") {
+			_mybg = _bglist [1];
+		} else if (game_game == "bingo") {
+			_mybg = _bglist [4];
+		} else if (game_game == "s7pk") {
+			_mybg = _bglist [3];
+		} 
+		_model.putValue ("current_game", game_game);
 
 	}
 
-	public void click2()
+	public void IconClick(string btnname)
 	{
-		Debug.Log ("click2");	
-		_log.textContent = "clieck2";
+		//Debug.Log ("value = " + btnname);
+		map_bg (btnname);
+		icon_forbidden ();
+		fade_out ();
 	}
 
-	public void click3()
+	private void icon_forbidden ()
 	{
-		Debug.Log ("click3");	
-		_log.textContent = "clieck3";
-		string s = "0,0,0,0";
+		string s = "0,0,0,0,0";
+		_avalibelist.set_avalible(new List<string>(s.Split(',')));
+	}
+
+	private void fade_out()
+	{
+		_bg.GetComponent<Image> ().CrossFadeAlpha(0.1f, 0.5f, false);
+		Invoke("lobbytogame", 0.5f);
+	}
+
+	public void lobbytogame()
+	{
+		_bg.GetComponent<Image> ().sprite = _mybg;
+		_bg.GetComponent<Image> ().CrossFadeAlpha(1f, 0.5f, false);
+		Invoke("loadgameok", 0.5f);
+	}
+
+	public void loadgameok()
+	{
+		_shareitem.item_set ("into_game");
+
+		//each game handle
+		string mygame = _model.getValue ("current_game");
+		Debug.Log ("into "+ mygame);
+		if (mygame == "dk") {
+			//_dk_proxy.init();
+		}
+		if (mygame == "pa") {
+			
+		}
+	}
+
+
+	public void back_lobby()
+	{
+		_bg.GetComponent<Image> ().CrossFadeAlpha(0.1f, 0.5f, false);
+		_mybg = _bglist [0];
+		Invoke("game_back_lobby", 0.5f);
+
+		_shareitem.item_set ("back_lobby");
+	}
+
+	public void game_back_lobby()
+	{
+		_bg.GetComponent<Image> ().sprite = _mybg;
+		_bg.GetComponent<Image> ().CrossFadeAlpha(1f, 0.5f, false);
+		Invoke("back_lobby_ok", 0.5f);
+	}
+
+	public void back_lobby_ok()
+	{
+		string s = _model.getValue("game_list");
 		_avalibelist.set_avalible(new List<string>(s.Split(',')));
 
-		Application.LoadLevel("DK");
-		//Invoke("DKcreate", 0.5f);
+		//handle leaveing game
+		string mygame = _model.getValue ("current_game");
+		Debug.Log ("out "+ mygame);
+		if (mygame == "dk") {
+			_dk_proxy.leave();
+		}
+		if (mygame == "pa") {
+			
+		}
 	}
 
 	public void loading_down()
 	{
 		Debug.Log ("loading_down");
 		_progressbar.gameObject.SetActive (false);
+	}
+
+	public void empty_test()
+	{
+		Debug.Log ("empty_test");
 	}
 
 	public void click_Fb_login()

@@ -16,6 +16,8 @@ public class avalibe : MonoBehaviour {
 
 	}
 
+
+
 	public void set_avalible(List<string> openlist)
 	{
 		data = openlist;
