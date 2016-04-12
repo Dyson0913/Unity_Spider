@@ -67,7 +67,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
-		_Connector.create ("ws://106.186.116.216:8201/gamesocket/token/"+_model.getValue("uuid"));
+		_Connector.create ("ws://www.mm9900.net:8001/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
 		_Connector.connect ();

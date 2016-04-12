@@ -26,6 +26,8 @@ public class Connect_script_lobby : MonoBehaviour {
 	public GameObject _bg;
 	private Sprite _mybg;
 
+	public avalibe _msghint;
+
 	public List<Button> _gameIcon;
 	public List<Sprite> _bglist;
 	public UI_Enable _shareitem;
@@ -41,6 +43,8 @@ public class Connect_script_lobby : MonoBehaviour {
 	void Start () {
 
 		_shareitem.item_init ();
+		string s = "0,0,0";
+		_msghint.set_avalible (new List<string> (s.Split (',')));
 
 		foreach (Button bt in _gameIcon) 
 		{
@@ -56,7 +60,7 @@ public class Connect_script_lobby : MonoBehaviour {
 	{
 		_Connector = new websocketModule();
 		_Connector.parser = new lobby_parser ();
-		_Connector.create ("ws://106.186.116.216:8001/gamesocket/token/c9f0f895fb98ab9159f51fd0297e236d");
+		_Connector.create ("ws://www.mm9900.net:8001/gamesocket/token/6f4922f45568161a8cdf4ad2299f6d23");
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
 		
