@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using System.IO;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -18,7 +18,13 @@ using GameCommon.StateMachine;
 public class Connect_script_DK: MonoBehaviour {
 
 	private IConnect _Connector;
-	
+
+
+	//share item in game
+	public UI_Text _ui_gameround;
+	public UI_Buttonlist _coin;
+	public UI_Text _bet_timer;
+	public UI_Text _log;
 
 	public List<UI_Text> bet_amount_list;
 	public List<UI_Text> cardlist;
@@ -28,12 +34,10 @@ public class Connect_script_DK: MonoBehaviour {
 	public List<UI_Text> _result_settle_amount;
 
 	//ui
-	private UI_Text _bet_timer;
-	private UI_Text _ui_gameround;
-	private UI_Text _log;
 	private List<Button> _coin_list;
+
 	//delegate
-	public avalibe _avalibelist;
+	public avalibe _view_avalible;
 
 	private StateMachine _state_m;
 
@@ -50,40 +54,31 @@ public class Connect_script_DK: MonoBehaviour {
 	private List<int> zone_bet;
 	private string _prebtn;
 
+
 	public Dictionary<string,string> state_mapping;
 
 
+	//sim_relative
+	private List<string> simpack;
+	private int simpck_idx;
+	private IParser _sim_parser;
+
 	// Use this for initialization
-	void Start () {
-
-
-
-		foreach (UI_Text bet in bet_amount_list) 
-		{
-			//work aroud
-			bet.textContent = "";
-		}
-
-
-		_Connector = new websocketModule();
-		_Connector.parser = new DK_parser ();
-		_Connector.create ("ws://www.mm9900.net:8001/gamesocket/token/"+_model.getValue("uuid"));
-		_Connector.MsgResponse += OnMessage;
-		_Connector.stateResponse += Onstate;
-		_Connector.connect ();
-	}
+//	void Start () {
+//
+//	}
 
 	public void init()
 	{
 		//get view item
 		_log = GameObject.Find ("Log").GetComponent<UI_Text>();
-		_ui_gameround = GameObject.Find ("game_round").GetComponent<UI_Text>();
-		_avalibelist = GameObject.Find ("avalibe_DK").GetComponent<avalibe>();
-		_bet_timer = GameObject.Find ("bet_timer").GetComponent<UI_Text>();
+		_ui_gameround.gameObject.SetActive(true); // = GameObject.Find ("game_round").GetComponent<UI_Text>();
+		round_code ("");
+		_bet_timer.textContent = "";
 
+		_coin_list = _coin._list;
 
-		UI_Buttonlist coin = GameObject.Find ("bet_timer").GetComponent<UI_Buttonlist>();
-		_coin_list = coin._list;
+		_view_avalible.gameObject.SetActive (true);// = GameObject.Find ("view_avalible_DK").GetComponent<avalibe>();
 
 		//data setting
 		_state_m = new StateMachine ();
@@ -99,7 +94,8 @@ public class Connect_script_DK: MonoBehaviour {
 		_model.putValue ("coin_select", "Coin_1");
 		
 		state_mapping = new Dictionary<string, string> ();
-		state_mapping.Add ("NewRoundState", "請開始下注");
+		state_mapping.Add ("NewRoundState", "新局");
+		state_mapping.Add ("StartBetState", "請開始下注");
 		state_mapping.Add ("EndBetState", "請停止下注");
 		state_mapping.Add ("OpenState", "開牌中");
 		state_mapping.Add ("EndRoundState", "結算中");
@@ -129,6 +125,41 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 		_prebtn = "";
 
+		//TODO not handle
+//		foreach (UI_Text bet in bet_amount_list) 
+//		{
+//			//work aroud
+//			bet.textContent = "";
+//		}
+
+		pc_test ();
+		//connect_to_server ();
+	}
+
+	public void pc_test()
+	{
+		simpack =  new List<string>();
+		simpck_idx =0;
+		string test = File.ReadAllText ("pack_DK_normal.txt");
+		JToken token = JToken.Parse(test);
+		//Debug.Log("DK json = "+ token);
+		JArray jarr = token["packlist"] as JArray;
+
+		for (int i=0; i< jarr.Count; i++) {
+			simpack.Add(jarr[i].ToString());
+		}
+
+		_sim_parser =  new DK_parser ();
+	}
+
+	public void connect_to_server()
+	{
+		_Connector = new websocketModule();
+		_Connector.parser = new DK_parser ();
+		_Connector.create ("ws://www.mm9900.net:8001/gamesocket/token/"+_model.getValue("uuid"));
+		_Connector.MsgResponse += OnMessage;
+		_Connector.stateResponse += Onstate;
+		_Connector.connect ();
 	}
 
 	public void leave()
@@ -165,23 +196,23 @@ public class Connect_script_DK: MonoBehaviour {
 	public void pack_handel(packArgs e)
 	{
 		string st = e.pack ["message_type"];
+		Debug.Log("DK st = "+ st);
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
 			_log.textContent = state_str(_state);
 			List<string> openlist = _state_m.stateupdate(_state);
-			_avalibelist.set_avalible(openlist);
+			_view_avalible.set_avalible(openlist);
 			
 			_model.putValue("game_id",e.pack["game_id"]);
 			_model.putValue("game_type",e.pack["game_type"]);
 			_model.putValue("game_round",e.pack["game_round"]);
-			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
+			round_code(_model.getValue("game_round"));
 			if( openlist[0] =="1")
 			{
 				//timer
 				Debug.Log("remain = "+e.pack["remain_time"]);
-				_bet_timer.textContent = e.pack["remain_time"];
-				_bet_timer.countDown = true;
+				timer_start(e.pack["remain_time"]);
 			}
 			
 			if( openlist[1] =="1")
@@ -190,6 +221,7 @@ public class Connect_script_DK: MonoBehaviour {
 				string card = e.pack["player_card_list"];
 				if( card !="")
 				{
+
 					playercard = new List<string>(card.Split(','));
 					if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
 					if( playercard.Count ==2)
@@ -239,19 +271,19 @@ public class Connect_script_DK: MonoBehaviour {
 			List<string> openlist = _state_m.stateupdate(_state);
 			if( openlist !=null)
 			{
-				_avalibelist.set_avalible(openlist);
+				_view_avalible.set_avalible(openlist);
 			}
 			
 			_model.putValue("game_round",e.pack["game_round"]);
-			_ui_gameround.textContent = "局號:"+ _model.getValue("game_round");
-			if( openlist[0] =="1")
+			round_code(_model.getValue("game_round"));
+			if( _state =="NewRoundState")
 			{
-				
-				_bet_timer.textContent = e.pack["remain_time"];
-				_bet_timer.countDown = true;
-				//timer
-				//_bet_timer.excute();
-				//_bet_timer = GameObject.Find ("bet_time").GetComponent<UI_Timer>();
+				//TODO hisotry recode
+				Debug.Log("NewRoundState=");
+			}
+			if( _state =="StartBetState")
+			{
+				timer_start(e.pack["remain_time"]);
 				Debug.Log("clen bet ="+ _bet_model.clean_bet());
 				
 				playercard.Clear();
@@ -277,7 +309,7 @@ public class Connect_script_DK: MonoBehaviour {
 			_log.textContent = state_str(_state);
 			
 			List<string> openlist = _state_m.stateupdate(_state);
-			if( openlist !=null) _avalibelist.set_avalible(openlist);
+			if( openlist !=null) _view_avalible.set_avalible(openlist);
 			
 			Debug.Log("carty = "+e.pack["card_type"]);
 			Debug.Log("card_list = "+e.pack["card_list"]);
@@ -315,8 +347,8 @@ public class Connect_script_DK: MonoBehaviour {
 				string s = _bet_model.bet_ok();
 				
 				Debug.Log("bet ok = "+ s);
-				string btnname = _model.getValue ("last_btn");
-				bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
+				//string btnname = _model.getValue ("last_btn");
+				//bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
 			}
 		}
 		if (st == "MsgBPEndRound") 
@@ -329,17 +361,17 @@ public class Connect_script_DK: MonoBehaviour {
 			Debug.Log("carty win_state= "+e.pack["win_state"]);
 			Debug.Log("carty bet_amount= "+e.pack["bet_amount"]);
 			List<string> openlist = _state_m.stateupdate(_state);
-			_avalibelist.set_avalible(openlist);
+			_view_avalible.set_avalible(openlist);
 			
-			List<string> name  = new List<string>(e.pack["bet_type"].ToString().Split(','));
-			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
-			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
-			for(int i=0;i< _result_bet_zone.Count;i++)
-			{
-				_result_bet_zone[i].textContent = _bet_model.display_name(name[i]);
-				_result_bet_amount[i].textContent = bet_amount[i];
-				_result_settle_amount[i].textContent = settle[i];
-			}
+//			List<string> name  = new List<string>(e.pack["bet_type"].ToString().Split(','));
+//			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
+//			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
+//			for(int i=0;i< _result_bet_zone.Count;i++)
+//			{
+//				_result_bet_zone[i].textContent = _bet_model.display_name(name[i]);
+//				_result_bet_amount[i].textContent = bet_amount[i];
+//				_result_settle_amount[i].textContent = settle[i];
+//			}
 		}
 		if (st == "check") 
 		{
@@ -347,6 +379,16 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 	}
 
+	private void round_code(string round)
+	{
+		_ui_gameround.textContent = round;
+	}
+
+	private void timer_start(string time_count)
+	{
+		_bet_timer.textContent = time_count;
+		_bet_timer.countDown = true;
+	}
 
 	public void betType(string btnname)
 	{
@@ -455,6 +497,19 @@ public class Connect_script_DK: MonoBehaviour {
 			_Connector.close ();
 		}
 		Debug.Log ("DK connect destroy");
+	}
+
+	public void sim_pack()
+	{
+		Debug.Log ("sim pack ="+simpack[simpck_idx]);
+		packArgs pack = _sim_parser.paser(simpack[simpck_idx]);
+		if (pack.pack.Count == 0) {
+			Debug.Log ("sim pack drop=");
+		} else {
+			pack_handel (pack);
+		}
+		simpck_idx = (simpck_idx + 1) % simpack.Count;
+
 	}
 	
 }

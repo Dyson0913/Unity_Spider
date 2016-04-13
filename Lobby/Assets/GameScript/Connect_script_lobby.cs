@@ -166,7 +166,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		string mygame = _model.getValue ("current_game");
 		Debug.Log ("into "+ mygame);
 		if (mygame == "dk") {
-			//_dk_proxy.init();
+			_dk_proxy.init();
 		}
 		if (mygame == "pa") {
 			

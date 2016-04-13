@@ -89,6 +89,10 @@ namespace GameScript.parser
 			}
 			else if (pack_type == "MsgPlayerBet") 
 			{
+				if( jo.Property ("timestamp").Value.ToString () =="1111")
+				{
+					return new packArgs(pack);
+				}
 				pack.Add ("message_type", pack_type);
 				pack.Add ("result", jo.Property ("result").Value.ToString ());
 			}
