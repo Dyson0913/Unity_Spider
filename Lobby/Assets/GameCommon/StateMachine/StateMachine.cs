@@ -41,23 +41,23 @@ namespace GameCommon.StateMachine
 			if (state == "EndBetState") 
 			{
 				avalible_list.Add("0");
-				avalible_list.Add("1");
 				avalible_list.Add("0");
+				avalible_list.Add("1");
 				avalible_list.Add("0");
 			}
 			if (state == "OpenState") 
 			{
 				avalible_list.Add("0");
-				avalible_list.Add("1");
 				avalible_list.Add("0");
+				avalible_list.Add("1");
 				avalible_list.Add("0");
 			}
 			if (state == "EndRoundState") 
 			{
 				avalible_list.Add("0");
 				avalible_list.Add("0");
-				avalible_list.Add("1");
 				avalible_list.Add("0");
+				avalible_list.Add("1");
 			}
 
 			_prestate = state;

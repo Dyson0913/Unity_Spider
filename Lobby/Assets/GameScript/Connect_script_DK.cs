@@ -14,24 +14,29 @@ using GameScript.parser;
 using GameCommon.StateMachine;
 
 
-
 public class Connect_script_DK: MonoBehaviour {
 
 	private IConnect _Connector;
 
-
+	public bool _local_test = true;
 	//share item in game
 	public UI_Text _ui_gameround;
 	public UI_Buttonlist _coin;
 	public UI_Text _bet_timer;
 	public UI_Text _log;
+	public UI_Enable _Coin_item;
 
+	//betview
 	public List<UI_Text> bet_amount_list;
-	public List<UI_Text> cardlist;
 	public List<Button> _btnlist;
-	public List<UI_Text> _result_bet_zone;
-	public List<UI_Text> _result_bet_amount;
-	public List<UI_Text> _result_settle_amount;
+
+	//opencard
+	public List<UI_Image> cardlist;
+	public List<UI_Image> cardback;
+
+	//settle
+	public List<UI_Text> _result_bet;
+	public List<UI_Text> _result_settle;
 
 	//ui
 	private List<Button> _coin_list;
@@ -51,7 +56,7 @@ public class Connect_script_DK: MonoBehaviour {
 	private List<string> bankercard;
 	private List<string> rivercard;
 
-	private List<int> zone_bet;
+
 	private string _prebtn;
 
 
@@ -87,11 +92,9 @@ public class Connect_script_DK: MonoBehaviour {
 		playercard = new List<string> ();
 		bankercard = new List<string> ();
 		rivercard = new List<string> ();
-		zone_bet = new List<int> ();
 		
 		_bet_model = new DK_bet ();
-		
-		_model.putValue ("coin_select", "Coin_1");
+
 		
 		state_mapping = new Dictionary<string, string> ();
 		state_mapping.Add ("NewRoundState", "新局");
@@ -102,7 +105,6 @@ public class Connect_script_DK: MonoBehaviour {
 
 		foreach (Button bt in _btnlist) 
 		{
-			//work aroud
 			string idx = bt.name;
 			bt.onClick.AddListener(()=>betType(idx));	
 		}
@@ -111,37 +113,32 @@ public class Connect_script_DK: MonoBehaviour {
 		//ColorBlock co= coin_list[0].colors;
 		//co.normalColor = Color.red;
 		//coin_list[0].colors = co;
-		//		foreach (Button coin in coin_list) 
-		//		{
-		//			//work aroud
-		//			string coin_idx = coin.name;
-		//			coin.onClick.AddListener(()=>coin_select(idx));	
-		//		}
+
+		_model.putValue ("coin_select", "Coin_1");
 		for (int i=0; i< _coin_list.Count; i++) {
-			//string coin_idx = _coin_list[i].name;
-			string idx =i.ToString();
-			_coin_list[i].onClick.AddListener(()=>coin_select(idx));
-			
+			string idx = i.ToString();
+			_coin_list[i].onClick.AddListener(()=>coin_select(idx));			
 		}
 		_prebtn = "";
 
-		//TODO not handle
-//		foreach (UI_Text bet in bet_amount_list) 
-//		{
-//			//work aroud
-//			bet.textContent = "";
-//		}
+		//init_poker_event ();
 
-		pc_test ();
-		//connect_to_server ();
+		if( _local_test) pc_test ();
+		else connect_to_server ();
 	}
 
 	public void pc_test()
 	{
 		simpack =  new List<string>();
 		simpck_idx =0;
-		string test = File.ReadAllText ("pack_DK_normal.txt");
-		JToken token = JToken.Parse(test);
+		//#if UNITY_EDITOR
+		 //string test = File.ReadAllText ("pack_DK_normal.txt");
+		// TextAsset tet =(TextAsset)Resources.LoadAssetAtPath ("Assets/Resources/" + "pack_DK_normal.txt", typeof(TextAsset));
+		//#endif
+
+		TextAsset tet = (TextAsset)Resources.Load<TextAsset> ("pack_DK_normal");
+
+		JToken token = JToken.Parse(tet.text);
 		//Debug.Log("DK json = "+ token);
 		JArray jarr = token["packlist"] as JArray;
 
@@ -152,6 +149,36 @@ public class Connect_script_DK: MonoBehaviour {
 		_sim_parser =  new DK_parser ();
 	}
 
+	public static string DataPathToAssetPath(string path)
+	{
+	     if (Application.platform == RuntimePlatform.WindowsEditor)
+	         return path.Substring(path.IndexOf("Assets\\"));
+	     else
+	         return path.Substring(path.IndexOf("Assets/"));
+	}
+
+	public static string DataPathToResourcesPath(string path)
+	{
+		
+		if (Application.platform == RuntimePlatform.WindowsEditor){
+			// Environment\Line_Up\Up\Flower_Category1\Flower@sprite.png
+			string result =  path.Substring(path.IndexOf("text\\"));
+			
+			// Environment/Line_Up/Up/Flower_Category1/Flower@sprite.png
+			string result1 =  result.Replace("\\","/");
+			
+			// Environment/Line_Up/Up/Flower_Category1/Flower@sprite
+			//int index = result1.LastIndexOf('.');
+			//string result2 = result1.Substring(0, index);
+			
+			return result1;
+			
+		}
+		
+		else
+			return path.Substring(path.IndexOf("text/"));
+	}
+	
 	public void connect_to_server()
 	{
 		_Connector = new websocketModule();
@@ -173,6 +200,15 @@ public class Connect_script_DK: MonoBehaviour {
 			_coin_list[i].onClick.RemoveAllListeners();
 			
 		}
+
+		List<string> openlist = _state_m.stateupdate("NewRoundState");
+		_view_avalible.set_avalible(openlist);
+
+		_coin.gameObject.SetActive(false);
+		log ("");
+		round_code ("");
+		timer_stop ();
+		remove_poker_event ();
 	}
 
 	public string state_str(string state)
@@ -196,11 +232,10 @@ public class Connect_script_DK: MonoBehaviour {
 	public void pack_handel(packArgs e)
 	{
 		string st = e.pack ["message_type"];
-		Debug.Log("DK st = "+ st);
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = state_str(_state);
+			log(state_str(_state));
 			List<string> openlist = _state_m.stateupdate(_state);
 			_view_avalible.set_avalible(openlist);
 			
@@ -223,11 +258,11 @@ public class Connect_script_DK: MonoBehaviour {
 				{
 
 					playercard = new List<string>(card.Split(','));
-					if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
+					//if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
 					if( playercard.Count ==2)
 					{
-						cardlist[0].textContent = playercard[0];
-						cardlist[1].textContent = playercard[1];
+						//cardlist[0].textContent = playercard[0];
+						//cardlist[1].textContent = playercard[1];
 					}
 				}
 				
@@ -235,11 +270,11 @@ public class Connect_script_DK: MonoBehaviour {
 				if( card !="")
 				{
 					bankercard = new List<string>(card.Split(','));
-					if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
+					//if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
 					if( bankercard.Count ==2)
 					{
-						cardlist[2].textContent = bankercard[0];
-						cardlist[3].textContent = bankercard[1];
+						//cardlist[2].textContent = bankercard[0];
+						//cardlist[3].textContent = bankercard[1];
 					}
 				}
 				
@@ -248,11 +283,11 @@ public class Connect_script_DK: MonoBehaviour {
 				{
 					rivercard = new List<string>(card.Split(','));
 					Debug.Log("ini r card= "+ rivercard.Count );
-					if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
+					//if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
 					if( rivercard.Count ==2)
 					{
-						cardlist[4].textContent = rivercard[0];
-						cardlist[5].textContent = rivercard[1];
+						//cardlist[4].textContent = rivercard[0];
+						//cardlist[5].textContent = rivercard[1];
 					}
 				}
 				
@@ -267,7 +302,7 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPState") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = state_str(_state);
+			log(state_str(_state));
 			List<string> openlist = _state_m.stateupdate(_state);
 			if( openlist !=null)
 			{
@@ -285,31 +320,35 @@ public class Connect_script_DK: MonoBehaviour {
 			{
 				timer_start(e.pack["remain_time"]);
 				Debug.Log("clen bet ="+ _bet_model.clean_bet());
+				//_Coin_item.item_set ("into_game");
+				_coin.gameObject.SetActive(true);
+				reset_bet_amount();
+				//reset_poker_item();
+
+
 				
+			}
+			if( _state =="EndBetState")
+			{
 				playercard.Clear();
 				bankercard.Clear();
 				rivercard.Clear();
-				
-				for( int i=0;i<bet_amount_list.Count;i++)
-				{
-					bet_amount_list[i].textContent = "";
-				}
-				
-				for( int i=0;i<cardlist.Count;i++)
-				{
-					cardlist[i].textContent = "";
-				}
-				
+
+				_coin.gameObject.SetActive(false);
+				timer_stop ();
+				reset_poker_item();
+				//why add will filp poker
+				//init_poker_event ();
 			}
 			
 		}
 		if (st == "MsgBPOpenCard") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = state_str(_state);
+			log(state_str(_state));
 			
-			List<string> openlist = _state_m.stateupdate(_state);
-			if( openlist !=null) _view_avalible.set_avalible(openlist);
+			//List<string> openlist = _state_m.stateupdate(_state);
+			//if( openlist !=null) _view_avalible.set_avalible(openlist);
 			
 			Debug.Log("carty = "+e.pack["card_type"]);
 			Debug.Log("card_list = "+e.pack["card_list"]);
@@ -317,24 +356,30 @@ public class Connect_script_DK: MonoBehaviour {
 			if( cardtype == "Player")
 			{
 				Debug.Log("playercard len =" + playercard.Count );
-				if( playercard.Count == 0)cardlist[0].textContent = e.pack["card_list"];
-				if( playercard.Count == 1)cardlist[1].textContent = e.pack["card_list"];
+				cardback [playercard.Count].RotateCard (1,playercard.Count);
+				cardback[playercard.Count].CardRotateComplete += card_open_done;
+				//cardlist[0].textContent = e.pack["card_list"];
+
 				playercard.Add(e.pack["card_list"]);
 			}
 			
 			if( cardtype == "Banker")
 			{
 				Debug.Log("bankercard len =" + bankercard.Count );
-				if( bankercard.Count == 0)cardlist[2].textContent = e.pack["card_list"];
-				if( bankercard.Count == 1)cardlist[3].textContent = e.pack["card_list"];
+
+				//cardlist[2].textContent = e.pack["card_list"];
+				cardback [bankercard.Count+2].RotateCard (1,bankercard.Count+2);
+				cardback[bankercard.Count+2].CardRotateComplete += card_open_done;
 				bankercard.Add(e.pack["card_list"]);
 			}
 			
 			if( cardtype == "River")
 			{
 				Debug.Log("rivercard len =" + rivercard.Count );
-				if( rivercard.Count == 0)cardlist[4].textContent = e.pack["card_list"];
-				if( rivercard.Count == 1)cardlist[5].textContent = e.pack["card_list"];
+
+				//cardlist[4].textContent = e.pack["card_list"];
+				cardback [rivercard.Count+4].RotateCard (1,rivercard.Count+4);
+				cardback[rivercard.Count+4].CardRotateComplete += card_open_done;
 				rivercard.Add(e.pack["card_list"]);
 			}
 			
@@ -347,36 +392,39 @@ public class Connect_script_DK: MonoBehaviour {
 				string s = _bet_model.bet_ok();
 				
 				Debug.Log("bet ok = "+ s);
-				//string btnname = _model.getValue ("last_btn");
-				//bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
+				string btnname = _model.getValue ("last_btn");
+				bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
 			}
 		}
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
-			_log.textContent = state_str(_state);
-			Debug.Log("carty bet_type= "+e.pack["bet_type"]);
-			Debug.Log("carty settle_amount= "+e.pack["settle_amount"]);
-			Debug.Log("carty odds= "+e.pack["odds"]);
-			Debug.Log("carty win_state= "+e.pack["win_state"]);
-			Debug.Log("carty bet_amount= "+e.pack["bet_amount"]);
+			log(state_str(_state));
+			Debug.Log(" bet_type= "+e.pack["bet_type"]);
+			Debug.Log(" settle_amount= "+e.pack["settle_amount"]);
+			Debug.Log(" odds= "+e.pack["odds"]);
+			Debug.Log(" win_state= "+e.pack["win_state"]);
+			Debug.Log(" bet_amount= "+e.pack["bet_amount"]);
 			List<string> openlist = _state_m.stateupdate(_state);
 			_view_avalible.set_avalible(openlist);
-			
-//			List<string> name  = new List<string>(e.pack["bet_type"].ToString().Split(','));
-//			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
-//			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
-//			for(int i=0;i< _result_bet_zone.Count;i++)
-//			{
-//				_result_bet_zone[i].textContent = _bet_model.display_name(name[i]);
-//				_result_bet_amount[i].textContent = bet_amount[i];
-//				_result_settle_amount[i].textContent = settle[i];
-//			}
+
+			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
+			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
+			for(int i=0;i< _result_bet.Count;i++)
+			{
+				_result_bet[i].textContent = bet_amount[i];
+				_result_settle[i].textContent = settle[i];
+			}
 		}
 		if (st == "check") 
 		{
 			Debug.Log("pack all = "+ e.pack["_all"]);
 		}
+	}
+
+	private void log(string logmsg)
+	{
+		_log.textContent = logmsg;
 	}
 
 	private void round_code(string round)
@@ -390,42 +438,102 @@ public class Connect_script_DK: MonoBehaviour {
 		_bet_timer.countDown = true;
 	}
 
+	private void reset_bet_amount()
+	{
+	   foreach (UI_Text bet in bet_amount_list) 
+	   {	 
+		 bet.textContent = "";
+		}
+	}
+
+	private void reset_poker_item()
+	{
+		for( int i=0;i<cardlist.Count;i++)
+		{
+			cardlist[i].rotate_to(0,270,0);
+		}
+		
+		for( int i=0;i<cardback.Count;i++)
+		{
+			cardback[i].rotate_to(0,0,0);
+		}
+	}
+
+	private void init_poker_event()
+	{
+		for( int i=0;i<cardlist.Count;i++)
+		{
+			cardlist[i].CardRotateComplete += card_open_done;
+		}
+
+		for( int i=0;i<cardback.Count;i++)
+		{		
+			cardback[i].CardRotateComplete += card_open_done;
+		}
+	}
+
+	private void remove_poker_event()
+	{
+
+		for( int i=0;i<cardlist.Count;i++)
+		{
+			cardlist[i].CardRotateComplete -= card_open_done;
+		}
+		
+		for( int i=0;i<cardback.Count;i++)
+		{		
+			cardback[i].CardRotateComplete -= card_open_done;
+		}
+
+	}
+	
+	private void timer_stop()
+	{
+		_bet_timer.stop_count ();		
+	}
+
 	public void betType(string btnname)
 	{
 		Debug.Log ("value = " +btnname);
-		return;
+
 		JObject bet=  _bet_model.add_bet (btnname);
 		//Debug.Log ("ob = "+bet.ToString());
+
 		_model.putValue ("last_btn", btnname);
 
-		//test
-		//string s = _bet_model.bet_ok();
-		//Debug.Log("bet ok = "+ s);
-		//coin update
-		//bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
-		
-		JObject ob = new JObject
-		{
-			{ "id",_model.getValue("uuid")},
-			{ "timestamp",1111},
-			{"message_type","MsgPlayerBet"},
-			{"game_id",_model.getValue("game_id")},
-			{"game_type",_model.getValue("game_type")},
-			{"game_round",_model.getValue("game_round")},
-			{"bet_type", bet["betType"]},
-			{"bet_amount",_bet_model.coin_value(bet["bet_amount"].ToString())},
-			{"total_bet_amount",bet["total_bet_amount"]}
-		};
-		Debug.Log ("ob = "+ob.ToString());
+		if (_local_test) {
+			string s = _bet_model.bet_ok();
+			Debug.Log("bet ok = "+ s);
+			//coin update
+			bet_amount_list [_bet_model.zone_idx (btnname)].textContent = _bet_model.get_total (btnname).ToString();
+		}
+		else {
+			JObject ob = new JObject
+			{
+				{ "id",_model.getValue("uuid")},
+				{ "timestamp",1111},
+				{"message_type","MsgPlayerBet"},
+				{"game_id",_model.getValue("game_id")},
+				{"game_type",_model.getValue("game_type")},
+				{"game_round",_model.getValue("game_round")},
+				{"bet_type", bet["betType"]},
+				//{"bet_amount",_bet_model.coin_value(bet["bet_amount"].ToString())},
+				{"bet_amount",bet["bet_amount"]},
+				{"total_bet_amount",bet["total_bet_amount"]}
+			};
+			Debug.Log ("ob = "+ob.ToString());
+			_Connector.send_to_Server(ob.ToString());
+		}
 
-		_Connector.send_to_Server(ob.ToString());
 	}
 
 	public void coin_select(string idx)
 	{
-		string btnname = "Coin_"+ (Int32.Parse(idx)+1);
-		Debug.Log ("btnnamed "+ btnname);
-		//return;
+		string btnname = "Coin_"+idx;
+		Debug.Log ("btnnamed "+ idx);
+		//color (idx);
+		//TODO select effect
+
 		_model.putValue("coin_select",btnname);
 		Debug.Log ("coin_select "+ _model.getValue("coin_select"));
 
@@ -445,7 +553,7 @@ public class Connect_script_DK: MonoBehaviour {
 //		co.normalColor = Color.red;
 //		coin_list[id].colors = co;
 
-		Debug.Log ("coin same to red "+ btnname);
+
 
 //		if ( (_prebtn != btnname) && (_prebtn !="")) {
 ////			int id2 = Int32.Parse (_prebtn);
@@ -462,41 +570,47 @@ public class Connect_script_DK: MonoBehaviour {
 //		}
 
 		_prebtn = btnname;
+		Debug.Log ("_prebtn ="+ _prebtn);
 		//color (idx);
 
 	}
+	
 
 	public void color(string idx)
 	{
-//		for (int i=0; i< coin_list.Count; i++) {
-//			ColorBlock co = coin_list[i].colors;
-//			
-//			if( i == (Int32.Parse(idx)))
-//			{
-//				Debug.Log("i = "+ idx);
-//				co.normalColor = Color.red;
-//				co.highlightedColor = Color.red;
-//			}
-//			else
-//			{
-//				co.normalColor = Color.white;
-//				co.highlightedColor = Color.white;
-//			}
-//			coin_list[i].colors = co;
-//		}
+		for (int i=0; i< _coin_list.Count; i++) {
+			ColorBlock co = _coin_list[i].colors;
+			
+			if( i == (Int32.Parse(idx)))
+			{
+				Debug.Log("i = "+ idx);
+				co.normalColor = Color.red;
+				co.highlightedColor = Color.red;
+			}
+			else
+			{
+				co.normalColor = Color.white;
+				co.highlightedColor = Color.white;
+			}
+			_coin_list[i].colors = co;
+		}
 	}
-
-	// Update is called once per frame
-	void Update () {
 	
-
-	}
-
 	void OnDestroy() {
 		if (_Connector != null) {
 			_Connector.close ();
 		}
 		Debug.Log ("DK connect destroy");
+	}
+
+	public void single_test()
+	{
+		//cardback [0].RotateCard (1);
+	}
+
+	private void card_open_done(object sender,stringArgs e)
+	{
+		cardlist [Int32.Parse(e.msg)].RotateCard (2,Int32.Parse(e.msg));
 	}
 
 	public void sim_pack()

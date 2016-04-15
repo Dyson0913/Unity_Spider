@@ -50,9 +50,9 @@ namespace GameCommon.Model
 
 		public virtual void define_bet_zone (){}
 
-		public JObject add_bet(string betname)
+		public JObject add_bet(string bet_zone_name)
 		{
-			JObject betob = create_betOb (betname);
+			JObject betob = create_betOb (bet_zone_name);
 
 			//action_queue
 			queue.Add (betob);
@@ -60,14 +60,15 @@ namespace GameCommon.Model
 			return betob;
 		}
 
-		public JObject create_betOb(string key)
+		public JObject create_betOb(string bet_zone_name)
 		{
-			int total = get_total(key) + coin_list [_model.getValue ("coin_select")];
-			string type = zone_mapping[key];
+			int bet_amount = coin_list [_model.getValue ("coin_select")];
+			int total = get_total(bet_zone_name) + bet_amount;
+			string type = zone_mapping[bet_zone_name];
 			JObject ob = new JObject
 			{
 				{"betType",type},
-				{"bet_amount",_model.getValue("coin_select")},
+				{"bet_amount",bet_amount},
 				{"total_bet_amount",total}
 			};
 			return ob;
@@ -82,7 +83,8 @@ namespace GameCommon.Model
 		   int total = 0;
 		   for (int i= 0; i< betlist.Count; i++) {
 				JObject single = betlist [i];
-				total += coin_list[single ["bet_amount"].ToString()];
+				//total += coin_list[single ["bet_amount"].ToString()];
+				total += Int32.Parse ( single ["bet_amount"].ToString());
 			}
 		   return total;
 		}
@@ -129,6 +131,7 @@ namespace GameCommon.Model
 			return zone_idx_mapping[type];
 		}
 
+		//deprecate
 		public string display_name(string type)
 		{
 			if (!zone_displayname_mapping.ContainsKey (type))

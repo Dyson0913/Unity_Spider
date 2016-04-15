@@ -181,6 +181,18 @@ public class Connect_script_lobby : MonoBehaviour {
 		Invoke("game_back_lobby", 0.5f);
 
 		_shareitem.item_set ("back_lobby");
+
+
+		
+		//handle leaveing game
+		string mygame = _model.getValue ("current_game");
+		Debug.Log ("out "+ mygame);
+		if (mygame == "dk") {
+			_dk_proxy.leave();
+		}
+		if (mygame == "pa") {
+			
+		}
 	}
 
 	public void game_back_lobby()
@@ -194,16 +206,6 @@ public class Connect_script_lobby : MonoBehaviour {
 	{
 		string s = _model.getValue("game_list");
 		_avalibelist.set_avalible(new List<string>(s.Split(',')));
-
-		//handle leaveing game
-		string mygame = _model.getValue ("current_game");
-		Debug.Log ("out "+ mygame);
-		if (mygame == "dk") {
-			_dk_proxy.leave();
-		}
-		if (mygame == "pa") {
-			
-		}
 	}
 
 	public void loading_down()

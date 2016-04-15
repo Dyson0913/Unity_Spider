@@ -31,6 +31,12 @@ public class UI_Text : MonoBehaviour {
 		InvokeRepeating("sub", 0, 1);
 	}
 
+	public void stop_count()
+	{
+		textContent = "";
+		CancelInvoke();
+	}
+
 	public void sub()
 	{
 		int cnt = int.Parse(textContent);
@@ -38,8 +44,7 @@ public class UI_Text : MonoBehaviour {
 		cnt -= 1;
 		if (cnt == -1)
 		{
-			textContent = "";
-			CancelInvoke();
+			stop_count();
 			return;
 		}
 		textContent = cnt.ToString ();
