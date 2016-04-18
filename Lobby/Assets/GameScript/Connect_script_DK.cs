@@ -12,7 +12,7 @@ using ConnectModule;
 using GameCommon.Model;
 using GameScript.parser;
 using GameCommon.StateMachine;
-
+using GameScript.utility;
 
 public class Connect_script_DK: MonoBehaviour {
 
@@ -43,6 +43,7 @@ public class Connect_script_DK: MonoBehaviour {
 
 	//delegate
 	public avalibe _view_avalible;
+	public avalibe _win_hint;
 
 	private StateMachine _state_m;
 
@@ -52,13 +53,11 @@ public class Connect_script_DK: MonoBehaviour {
 
 	private string _state;
 
-	private List<string> playercard;
-	private List<string> bankercard;
-	private List<string> rivercard;
-
+	private poker _poker;
 
 	private string _prebtn;
-
+	private List<int> poker_open;
+	private List<string> state_update;
 
 	public Dictionary<string,string> state_mapping;
 
@@ -69,9 +68,10 @@ public class Connect_script_DK: MonoBehaviour {
 	private IParser _sim_parser;
 
 	// Use this for initialization
-//	void Start () {
-//
-//	}
+	void Start () {
+		poker_open = new List<int> ();
+		state_update = new List<string> ();
+	}
 
 	public void init()
 	{
@@ -87,12 +87,10 @@ public class Connect_script_DK: MonoBehaviour {
 
 		//data setting
 		_state_m = new StateMachine ();
-		_state_m.state = "None";
-		
-		playercard = new List<string> ();
-		bankercard = new List<string> ();
-		rivercard = new List<string> ();
-		
+		_state_m._state = "None";
+
+		_poker = new poker ();
+
 		_bet_model = new DK_bet ();
 
 		
@@ -181,9 +179,10 @@ public class Connect_script_DK: MonoBehaviour {
 	
 	public void connect_to_server()
 	{
+		Debug.Log ("dk uuid = " + _model.getValue("uuid"));
 		_Connector = new websocketModule();
 		_Connector.parser = new DK_parser ();
-		_Connector.create ("ws://www.mm9900.net:8001/gamesocket/token/"+_model.getValue("uuid"));
+		_Connector.create ("ws://www.mm9900.net:8201/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
 		_Connector.connect ();
@@ -209,6 +208,17 @@ public class Connect_script_DK: MonoBehaviour {
 		round_code ("");
 		timer_stop ();
 		remove_poker_event ();
+
+		poker_open.Clear ();
+		state_update.Clear ();
+
+		_poker.clean ();
+
+		if (_Connector != null) {
+			_Connector.close ();
+			Debug.Log ("DK leave disconnect ");
+		}
+
 	}
 
 	public string state_str(string state)
@@ -232,9 +242,11 @@ public class Connect_script_DK: MonoBehaviour {
 	public void pack_handel(packArgs e)
 	{
 		string st = e.pack ["message_type"];
+		Debug.Log ("dk pack_handel message = " + st);
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
+			Debug.Log ("dk _state = " + _state);
 			log(state_str(_state));
 			List<string> openlist = _state_m.stateupdate(_state);
 			_view_avalible.set_avalible(openlist);
@@ -243,58 +255,73 @@ public class Connect_script_DK: MonoBehaviour {
 			_model.putValue("game_type",e.pack["game_type"]);
 			_model.putValue("game_round",e.pack["game_round"]);
 			round_code(_model.getValue("game_round"));
-			if( openlist[0] =="1")
+
+			if( _state =="StartBetState")
+			{
+				timer_start(e.pack["remain_time"]);
+				Debug.Log("clen bet ="+ _bet_model.clean_bet());
+				//_Coin_item.item_set ("into_game");
+				state_update.Add (_state);
+			}
+			if( _state == "EndBetState")
 			{
 				//timer
 				Debug.Log("remain = "+e.pack["remain_time"]);
 				timer_start(e.pack["remain_time"]);
 			}
-			
-			if( openlist[1] =="1")
+			if( _state == "OpenState")
 			{
 				
 				string card = e.pack["player_card_list"];
 				if( card !="")
 				{
-
-					playercard = new List<string>(card.Split(','));
-					//if( playercard.Count == 1)cardlist[0].textContent = playercard[0];
-					if( playercard.Count ==2)
+					_poker.set_all(poker_type.Player,card);
+					//playercard = new List<string>(card.Split(','));
+					if( _poker.get_count(poker_type.Player) == 1)
 					{
-						//cardlist[0].textContent = playercard[0];
-						//cardlist[1].textContent = playercard[1];
+						poker_open.Add(0);
+					}
+					if( _poker.get_count(poker_type.Player) ==2)
+					{
+						poker_open.Add(0);
+						poker_open.Add(1);
 					}
 				}
 				
 				card = e.pack["banker_card_list"];
 				if( card !="")
 				{
-					bankercard = new List<string>(card.Split(','));
-					//if( bankercard.Count ==1)cardlist[2].textContent = bankercard[0];				
-					if( bankercard.Count ==2)
+					_poker.set_all(poker_type.Banker,card);
+					if( _poker.get_count(poker_type.Banker) ==1)
 					{
-						//cardlist[2].textContent = bankercard[0];
-						//cardlist[3].textContent = bankercard[1];
+						poker_open.Add(2);
+					}
+					if( _poker.get_count(poker_type.Banker) ==2)
+					{
+						poker_open.Add(2);
+						poker_open.Add(3);
 					}
 				}
 				
 				card = e.pack["river_card_list"];
 				if( card !="")
 				{
-					rivercard = new List<string>(card.Split(','));
-					Debug.Log("ini r card= "+ rivercard.Count );
-					//if( rivercard.Count ==1)cardlist[4].textContent = rivercard[0];				
-					if( rivercard.Count ==2)
+					_poker.set_all(poker_type.River,card);
+					if( _poker.get_count(poker_type.River)==1)
 					{
-						//cardlist[4].textContent = rivercard[0];
-						//cardlist[5].textContent = rivercard[1];
+						poker_open.Add(4);
+					}
+					if( _poker.get_count(poker_type.River) ==2)
+					{
+						poker_open.Add(4);
+						poker_open.Add(5);
 					}
 				}
 				
 				Debug.Log("pack all p= "+ e.pack["player_card_list"]);
 				Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
 				Debug.Log("pack all r= "+ e.pack["river_card_list"]);
-				Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
+				//Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
 			}
 			
 			
@@ -315,30 +342,32 @@ public class Connect_script_DK: MonoBehaviour {
 			{
 				//TODO hisotry recode
 				Debug.Log("NewRoundState=");
+				state_update.Add (_state);
 			}
 			if( _state =="StartBetState")
 			{
 				timer_start(e.pack["remain_time"]);
 				Debug.Log("clen bet ="+ _bet_model.clean_bet());
 				//_Coin_item.item_set ("into_game");
-				_coin.gameObject.SetActive(true);
-				reset_bet_amount();
-				//reset_poker_item();
+				state_update.Add (_state);
 
-
-				
 			}
 			if( _state =="EndBetState")
 			{
-				playercard.Clear();
-				bankercard.Clear();
-				rivercard.Clear();
+				_poker.clean();
 
-				_coin.gameObject.SetActive(false);
-				timer_stop ();
-				reset_poker_item();
+				state_update.Add (_state);
+
 				//why add will filp poker
 				//init_poker_event ();
+			}
+			if( _state == "OpenState")
+			{
+				state_update.Add (_state);
+			}
+			if( _state == "EndRoundState")
+			{
+				state_update.Add (_state);
 			}
 			
 		}
@@ -355,32 +384,28 @@ public class Connect_script_DK: MonoBehaviour {
 			string cardtype = e.pack["card_type"];
 			if( cardtype == "Player")
 			{
-				Debug.Log("playercard len =" + playercard.Count );
-				cardback [playercard.Count].RotateCard (1,playercard.Count);
-				cardback[playercard.Count].CardRotateComplete += card_open_done;
-				//cardlist[0].textContent = e.pack["card_list"];
+				int pcount = _poker.get_count(poker_type.Player);
+				cardback [pcount].RotateCard (1,pcount);
+				cardback[pcount].CardRotateComplete += card_open_done;
 
-				playercard.Add(e.pack["card_list"]);
+				_poker.set_poker(poker_type.Player,e.pack["card_list"]);
+				//playercard.Add(e.pack["card_list"]);
 			}
 			
 			if( cardtype == "Banker")
 			{
-				Debug.Log("bankercard len =" + bankercard.Count );
-
-				//cardlist[2].textContent = e.pack["card_list"];
-				cardback [bankercard.Count+2].RotateCard (1,bankercard.Count+2);
-				cardback[bankercard.Count+2].CardRotateComplete += card_open_done;
-				bankercard.Add(e.pack["card_list"]);
+				int bcount = _poker.get_count(poker_type.Banker);
+				cardback [bcount+2].RotateCard (1,bcount+2);
+				cardback[bcount+2].CardRotateComplete += card_open_done;
+				_poker.set_poker(poker_type.Banker,e.pack["card_list"]);
 			}
 			
 			if( cardtype == "River")
-			{
-				Debug.Log("rivercard len =" + rivercard.Count );
-
-				//cardlist[4].textContent = e.pack["card_list"];
-				cardback [rivercard.Count+4].RotateCard (1,rivercard.Count+4);
-				cardback[rivercard.Count+4].CardRotateComplete += card_open_done;
-				rivercard.Add(e.pack["card_list"]);
+			{	
+				int rcount = _poker.get_count(poker_type.River);
+				cardback [rcount+4].RotateCard (1,rcount+4);
+				cardback[rcount+4].CardRotateComplete += card_open_done;
+				_poker.set_poker(poker_type.River,e.pack["card_list"]);
 			}
 			
 		}
@@ -405,16 +430,15 @@ public class Connect_script_DK: MonoBehaviour {
 			Debug.Log(" odds= "+e.pack["odds"]);
 			Debug.Log(" win_state= "+e.pack["win_state"]);
 			Debug.Log(" bet_amount= "+e.pack["bet_amount"]);
-			List<string> openlist = _state_m.stateupdate(_state);
-			_view_avalible.set_avalible(openlist);
+
 
 			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
 			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
-			for(int i=0;i< _result_bet.Count;i++)
-			{
-				_result_bet[i].textContent = bet_amount[i];
-				_result_settle[i].textContent = settle[i];
-			}
+			_model.putValue("settle_amount",settle);
+			_model.putValue("bet_amount",bet_amount);
+
+			state_update.Add (_state);
+
 		}
 		if (st == "check") 
 		{
@@ -438,12 +462,56 @@ public class Connect_script_DK: MonoBehaviour {
 		_bet_timer.countDown = true;
 	}
 
+	private void start_bet_init()
+	{
+		_coin.gameObject.SetActive(true);
+		reset_bet_amount();
+
+		_win_hint.gameObject.SetActive (false);
+	}
+
+	private void end_bet_init()
+	{
+		_coin.gameObject.SetActive(false);
+		timer_stop ();
+		reset_poker_item();
+		remove_poker_event ();
+	}
+
+	private void end_round_init()
+	{
+		_win_hint.gameObject.SetActive (true);
+
+
+		Invoke("show_settle", 2f);
+	}
+
+	public void show_settle()
+	{
+		//wait to new switch view
+		List<string> openlist = _state_m.stateupdate(_state_m._state);
+		_view_avalible.set_avalible(openlist);
+
+		for(int i=0;i< _result_bet.Count;i++)
+		{
+			_result_bet[i].textContent = bet_amount[i];
+			_result_settle[i].textContent = settle[i];
+		}
+
+	}
+
 	private void reset_bet_amount()
 	{
 	   foreach (UI_Text bet in bet_amount_list) 
 	   {	 
 		 bet.textContent = "";
 		}
+	}
+
+	private void direct_turn_poker(int idx)
+	{
+		cardlist[idx].rotate_to(0,360,0);
+		cardback[idx].rotate_to(0,90,0);
 	}
 
 	private void reset_poker_item()
@@ -486,7 +554,8 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 
 	}
-	
+
+
 	private void timer_stop()
 	{
 		_bet_timer.stop_count ();		
@@ -608,8 +677,30 @@ public class Connect_script_DK: MonoBehaviour {
 		//cardback [0].RotateCard (1);
 	}
 
+	void Update () {
+
+		if (poker_open.Count != 0) {
+			for( int i=0;i< poker_open.Count;i++)
+			{
+				Debug.Log("poker_open"+poker_open[i]);
+				direct_turn_poker(poker_open[i]);
+			}
+			poker_open.Clear();
+		}
+
+		if (state_update.Count != 0) {
+			string state = state_update[0];
+			if( state == "StartBetState")start_bet_init();
+			if( state == "EndBetState")end_bet_init();
+			if( state == "EndRoundState") end_round_init();
+			state_update.Clear();
+		}
+
+	}
+
 	private void card_open_done(object sender,stringArgs e)
 	{
+		cardback[Int32.Parse(e.msg)].CardRotateComplete -= card_open_done;
 		cardlist [Int32.Parse(e.msg)].RotateCard (2,Int32.Parse(e.msg));
 	}
 

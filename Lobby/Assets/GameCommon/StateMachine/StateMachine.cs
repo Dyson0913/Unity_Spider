@@ -6,12 +6,17 @@ namespace GameCommon.StateMachine
 
 	public class StateMachine 
 	{
-		public string state { get; set; }
+		public string _state { get; set; }
 		private string _prestate;
 
 		public StateMachine()
 		{
 			_prestate = "None";
+		}
+
+		public void set_state(string state)
+		{
+			_state = state;
 		}
 
 		public List<string> stateupdate(string state)

@@ -76,12 +76,15 @@ public class Connect_script_lobby : MonoBehaviour {
 
 	private void OnMessage(object sender,packArgs e)
 	{
-		//Debug.Log ("Lobby message = " + e.pack ["message_type"]);
+		Debug.Log ("Lobby message = " + e.pack ["message_type"]);
 		string state = e.pack ["message_type"];
 		if (state == "MsgLogin") {
 			_name.textContent = e.pack ["player_name"];
 			_credit.textContent = e.pack ["player_credit"];
+
 			_model.putValue ("uuid", e.pack ["player_uuid"]);
+			//_model.putValue ("uuid", "6f4922f45568161a8cdf4ad2299f6d23");
+			Debug.Log ("Lobby uuid = " + _model.getValue("uuid"));
 			string s = e.pack ["game_avaliable"];
 			_model.putValue ("game_list", s);
 
