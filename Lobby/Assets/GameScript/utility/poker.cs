@@ -53,6 +53,53 @@ namespace GameScript.utility
 			return 0;
 		}
 
+		public string get_poker(poker_type type)
+		{
+			if (type == poker_type.Player)  return playercard[playercard.Count-1];
+			if (type == poker_type.Banker)  return bankercard[bankercard.Count-1];
+			if (type == poker_type.River)  return rivercard[rivercard.Count-1];
+			return "";
+		}
+
+		public List<int> get_pokser_res_idx(poker_type type)
+		{
+			List<string> poker = new List<string> ();
+			if (type == poker_type.Player) poker = playercard;
+			if (type == poker_type.Banker) poker = bankercard;
+			if (type == poker_type.River) poker = rivercard;
+
+			List<int> poker_idx_list = new List<int>();
+			for( int i=0; i< poker.Count;i++)
+			{
+				int idx = this.pokerTrans (poker[i]);
+				poker_idx_list.Add(idx);
+			}
+
+			return poker_idx_list;
+		}
+
+
+		public int pokerTrans(string poker_s)
+		{			
+			String point = poker_s.Substring(0, 1);
+			String color = poker_s.Substring(1, 1);
+			
+			int myidx = 0;
+
+			if ( color == "s") myidx = 0;
+			if ( color == "h") myidx = 13;
+			if ( color == "c") myidx = 26;
+			if ( color == "d") myidx = 39;
+			
+			if ( point == "i") myidx += 9;
+			else if ( point == "j") myidx += (10);
+			else if ( point == "q") myidx += (11);
+			else if ( point == "k") myidx += (12);
+			else 	myidx +=  Int32.Parse(point) -1 ;
+			
+			return myidx;
+		}
+
 		public int get_Point(poker_type type)
 		{
 			List<string> poker = new List<string> ();
@@ -61,6 +108,9 @@ namespace GameScript.utility
 			if (type == poker_type.River) poker = rivercard;
 
 			int n = poker.Count;
+			if (n != 2)
+				return -1;
+
 			int total = 0;
 			for (int i = 0; i < n; i++)
 			{

@@ -33,6 +33,8 @@ public class Connect_script_DK: MonoBehaviour {
 	//opencard
 	public List<UI_Image> cardlist;
 	public List<UI_Image> cardback;
+	public UI_Text _player_point;
+	public UI_Text _banker_point;
 
 	//settle
 	public List<UI_Text> _result_bet;
@@ -51,16 +53,24 @@ public class Connect_script_DK: MonoBehaviour {
 	private Model _model = Model.Instance;
 	private Model_bet _bet_model;
 
+	public Connect_script_lobby _lobby_proxy;
+
 	private string _state;
 
 	private poker _poker;
+
+	private int phase_msg_start_bet = 0;
+	private int phase_msg_stop_bet = 1;
+	private int phase_msg_no_credit = 2;
 
 	private string _prebtn;
 	private List<int> poker_open;
 	private List<string> state_update;
 
+
 	public Dictionary<string,string> state_mapping;
 
+	private List<Sprite> _poker_sprite;
 
 	//sim_relative
 	private List<string> simpack;
@@ -71,6 +81,17 @@ public class Connect_script_DK: MonoBehaviour {
 	void Start () {
 		poker_open = new List<int> ();
 		state_update = new List<string> ();
+		_poker_sprite = new List<Sprite> ();
+
+		_poker = new poker ();
+
+		//poker load TODO remove to resmgr
+		for(int i=1;i< 55 ;i++)
+		{
+			string id = "poker_"+String.Format("{0:D2}",i);
+			Sprite s = (Sprite)Resources.Load<Sprite> ("share/poker/"+id);
+			_poker_sprite.Add(s);
+		}
 	}
 
 	public void init()
@@ -89,11 +110,11 @@ public class Connect_script_DK: MonoBehaviour {
 		_state_m = new StateMachine ();
 		_state_m._state = "None";
 
-		_poker = new poker ();
+
 
 		_bet_model = new DK_bet ();
 
-		
+		//TODO 可不用,只是log顥示
 		state_mapping = new Dictionary<string, string> ();
 		state_mapping.Add ("NewRoundState", "新局");
 		state_mapping.Add ("StartBetState", "請開始下注");
@@ -228,10 +249,15 @@ public class Connect_script_DK: MonoBehaviour {
 		return state_mapping [state];
 	}
 
+	private void error_msg(string msg)
+	{
+		_lobby_proxy.error_msg (msg);
+	}
 
 	private void Onstate(object sender,stringArgs e)
 	{
 		Debug.Log("DK Onstate = "+ e.msg);
+		if( e.msg != "open") error_msg (e.msg);
 	}
 
 	private void OnMessage(object sender,packArgs e)
@@ -243,13 +269,15 @@ public class Connect_script_DK: MonoBehaviour {
 	{
 		string st = e.pack ["message_type"];
 		Debug.Log ("dk pack_handel message = " + st);
+
+
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
 			Debug.Log ("dk _state = " + _state);
 			log(state_str(_state));
-			List<string> openlist = _state_m.stateupdate(_state);
-			_view_avalible.set_avalible(openlist);
+			_state_m._state = _state;
+			view_enable();
 			
 			_model.putValue("game_id",e.pack["game_id"]);
 			_model.putValue("game_type",e.pack["game_type"]);
@@ -258,25 +286,16 @@ public class Connect_script_DK: MonoBehaviour {
 
 			if( _state =="StartBetState")
 			{
-				timer_start(e.pack["remain_time"]);
-				Debug.Log("clen bet ="+ _bet_model.clean_bet());
+				_model.putValue("remain_time",e.pack["remain_time"]);
 				//_Coin_item.item_set ("into_game");
-				state_update.Add (_state);
 			}
-			if( _state == "EndBetState")
-			{
-				//timer
-				Debug.Log("remain = "+e.pack["remain_time"]);
-				timer_start(e.pack["remain_time"]);
-			}
+
 			if( _state == "OpenState")
 			{
-				
 				string card = e.pack["player_card_list"];
 				if( card !="")
 				{
 					_poker.set_all(poker_type.Player,card);
-					//playercard = new List<string>(card.Split(','));
 					if( _poker.get_count(poker_type.Player) == 1)
 					{
 						poker_open.Add(0);
@@ -323,62 +342,46 @@ public class Connect_script_DK: MonoBehaviour {
 				Debug.Log("pack all r= "+ e.pack["river_card_list"]);
 				//Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
 			}
-			
+
+			state_update.Add (_state);
 			
 		}
 		if (st == "MsgBPState") 
 		{
 			_state = e.pack["game_state"];
+			Debug.Log ("dk _state = " + _state);
 			log(state_str(_state));
-			List<string> openlist = _state_m.stateupdate(_state);
-			if( openlist !=null)
-			{
-				_view_avalible.set_avalible(openlist);
-			}
-			
+			_state_m._state = _state;
+			view_enable();
+
 			_model.putValue("game_round",e.pack["game_round"]);
 			round_code(_model.getValue("game_round"));
+
 			if( _state =="NewRoundState")
 			{
 				//TODO hisotry recode
-				Debug.Log("NewRoundState=");
-				state_update.Add (_state);
+
 			}
 			if( _state =="StartBetState")
 			{
-				timer_start(e.pack["remain_time"]);
-				Debug.Log("clen bet ="+ _bet_model.clean_bet());
+				_model.putValue("remain_time",e.pack["remain_time"]);
 				//_Coin_item.item_set ("into_game");
-				state_update.Add (_state);
+			}
 
-			}
-			if( _state =="EndBetState")
-			{
-				_poker.clean();
 
-				state_update.Add (_state);
 
-				//why add will filp poker
-				//init_poker_event ();
-			}
-			if( _state == "OpenState")
-			{
-				state_update.Add (_state);
-			}
-			if( _state == "EndRoundState")
-			{
-				state_update.Add (_state);
-			}
-			
+			state_update.Add (_state);
+
 		}
 		if (st == "MsgBPOpenCard") 
 		{
 			_state = e.pack["game_state"];
+			Debug.Log ("dk _state = " + _state);
 			log(state_str(_state));
-			
-			//List<string> openlist = _state_m.stateupdate(_state);
-			//if( openlist !=null) _view_avalible.set_avalible(openlist);
-			
+			_state_m._state = _state;
+
+
+			Debug.Log ("dk _state_m._state = " + _state_m._state);
 			Debug.Log("carty = "+e.pack["card_type"]);
 			Debug.Log("card_list = "+e.pack["card_list"]);
 			string cardtype = e.pack["card_type"];
@@ -389,7 +392,6 @@ public class Connect_script_DK: MonoBehaviour {
 				cardback[pcount].CardRotateComplete += card_open_done;
 
 				_poker.set_poker(poker_type.Player,e.pack["card_list"]);
-				//playercard.Add(e.pack["card_list"]);
 			}
 			
 			if( cardtype == "Banker")
@@ -407,7 +409,8 @@ public class Connect_script_DK: MonoBehaviour {
 				cardback[rcount+4].CardRotateComplete += card_open_done;
 				_poker.set_poker(poker_type.River,e.pack["card_list"]);
 			}
-			
+
+			state_update.Add (_state);
 		}
 		
 		if (st == "MsgPlayerBet") 
@@ -424,26 +427,29 @@ public class Connect_script_DK: MonoBehaviour {
 		if (st == "MsgBPEndRound") 
 		{
 			_state = e.pack["game_state"];
+
 			log(state_str(_state));
+			_state_m._state = _state;
+			view_enable();
+
 			Debug.Log(" bet_type= "+e.pack["bet_type"]);
 			Debug.Log(" settle_amount= "+e.pack["settle_amount"]);
 			Debug.Log(" odds= "+e.pack["odds"]);
 			Debug.Log(" win_state= "+e.pack["win_state"]);
 			Debug.Log(" bet_amount= "+e.pack["bet_amount"]);
 
+			_bet_model.settle_amount(e.pack["settle_amount"].ToString());
+			_bet_model.bet_amount(e.pack["bet_amount"].ToString());
 
-			List<string> settle  = new List<string>(e.pack["settle_amount"].ToString().Split(','));
-			List<string> bet_amount  = new List<string>(e.pack["bet_amount"].ToString().Split(','));
-			_model.putValue("settle_amount",settle);
-			_model.putValue("bet_amount",bet_amount);
 
 			state_update.Add (_state);
 
+
 		}
-		if (st == "check") 
-		{
-			Debug.Log("pack all = "+ e.pack["_all"]);
-		}
+//		if (st == "check") 
+//		{
+//			Debug.Log("pack all = "+ e.pack["_all"]);
+//		}
 	}
 
 	private void log(string logmsg)
@@ -462,12 +468,40 @@ public class Connect_script_DK: MonoBehaviour {
 		_bet_timer.countDown = true;
 	}
 
+	private void new_round_init()
+	{
+		string s = "0,0";
+		_win_hint.set_avalible(new List<string>(s.Split(',')));
+		_win_hint.gameObject.SetActive (false);
+
+		_player_point.textContent = "";
+		_banker_point.textContent = "";
+	}
+	
+
+	private void view_enable()
+	{
+		List<string> openlist = _state_m.stateupdate(_state_m._state);
+		_view_avalible.set_avalible(openlist);
+	}
+
 	private void start_bet_init()
 	{
 		_coin.gameObject.SetActive(true);
+
+		timer_start(_model.getValue("remain_time"));
+
 		reset_bet_amount();
+		_bet_model.clean_bet();
 
 		_win_hint.gameObject.SetActive (false);
+
+		_lobby_proxy.phase_msg (phase_msg_start_bet,fadeout);
+	}
+
+	public void fadeout(int idx,bool b)
+	{
+		Debug.Log ("DK fadeout ");
 	}
 
 	private void end_bet_init()
@@ -476,28 +510,50 @@ public class Connect_script_DK: MonoBehaviour {
 		timer_stop ();
 		reset_poker_item();
 		remove_poker_event ();
+		_poker.clean();
+
+		//TODO private int phase_msg_no_credit = 2;
+		_lobby_proxy.phase_msg (phase_msg_stop_bet,fadeout);
 	}
 
+	private void open_card_init()
+	{
+
+	}
+	
 	private void end_round_init()
 	{
-		_win_hint.gameObject.SetActive (true);
 
+		List<string> bet = _bet_model.bet;
+		List<string> settle = _bet_model.settle;
+		for(int i=0;i< bet.Count;i++)
+		{
+			_result_bet[i].textContent = bet[i];
+			_result_settle[i].textContent = settle[i];
+		}
 
-		Invoke("show_settle", 2f);
+		int p_point = _poker.get_Point (poker_type.Player);
+		int b_point = _poker.get_Point (poker_type.Banker);
+		string s = p_point.ToString()+","+b_point.ToString();
+		_win_hint.set_avalible(new List<string>(s.Split(',')));
+
+		//Invoke("show_settle", 2f);
 	}
 
 	public void show_settle()
 	{
-		//wait to new switch view
-		List<string> openlist = _state_m.stateupdate(_state_m._state);
-		_view_avalible.set_avalible(openlist);
+		//wait to new switch view	
+	}
 
-		for(int i=0;i< _result_bet.Count;i++)
-		{
-			_result_bet[i].textContent = bet_amount[i];
-			_result_settle[i].textContent = settle[i];
+	public void caculate_point()
+	{
+		int p_point = _poker.get_Point (poker_type.Player);
+		int b_point = _poker.get_Point (poker_type.Banker);
+		if (p_point != -1 || b_point != -1) {
+			_win_hint.gameObject.SetActive (true);
+			if( p_point !=-1) _player_point.textContent = p_point.ToString();
+			if( b_point !=-1) _banker_point.textContent = b_point.ToString();
 		}
-
 	}
 
 	private void reset_bet_amount()
@@ -508,10 +564,37 @@ public class Connect_script_DK: MonoBehaviour {
 		}
 	}
 
-	private void direct_turn_poker(int idx)
-	{
-		cardlist[idx].rotate_to(0,360,0);
-		cardback[idx].rotate_to(0,90,0);
+	private void direct_turn_poker()
+	{	
+		List<int> poker_list;
+		 poker_list = _poker.get_pokser_res_idx (poker_type.Player);
+	
+		for (int i=0; i< poker_list.Count; i++) {
+			int id = poker_list[i];
+			cardlist [i].GetComponent<Image> ().sprite = _poker_sprite [id];
+		}
+
+		poker_list.Clear ();
+		poker_list = _poker.get_pokser_res_idx (poker_type.Banker);
+		for (int i=0; i< poker_list.Count; i++) {
+			int id = poker_list[i];
+			cardlist [i+2].GetComponent<Image> ().sprite = _poker_sprite [id];
+		}
+
+		poker_list.Clear ();
+		poker_list = _poker.get_pokser_res_idx (poker_type.River);
+		for (int i=0; i< poker_list.Count; i++) {
+			int id = poker_list[i];
+			cardlist [i+4].GetComponent<Image> ().sprite = _poker_sprite [id];
+		}
+
+
+		for (int idx =0; idx< poker_open.Count; idx++) {
+			int open_idx = poker_open[idx];
+			cardlist[open_idx].rotate_to(0,360,0);
+			cardback[open_idx].rotate_to(0,90,0);
+			
+		}
 	}
 
 	private void reset_poker_item()
@@ -612,32 +695,6 @@ public class Connect_script_DK: MonoBehaviour {
 			return;
 		}
 
-		//why not working
-//		Button bt  = GameObject.Find (btnname).GetComponent<Button>();
-//		ColorBlock co= bt.colors;
-//		co.normalColor = Color.red;
-//		bt.colors = co;
-//		int id = Int32.Parse (btnname);
-//		ColorBlock co= coin_list[id].colors;
-//		co.normalColor = Color.red;
-//		coin_list[id].colors = co;
-
-
-
-//		if ( (_prebtn != btnname) && (_prebtn !="")) {
-////			int id2 = Int32.Parse (_prebtn);
-////			ColorBlock co2= coin_list[id].colors;
-////			co2.normalColor = Color.white;
-////			coin_list[id2].colors = co2;
-//
-//			Button bt2  = GameObject.Find (_prebtn).GetComponent<Button>();
-//			ColorBlock co2= bt2.colors;
-//			co2.normalColor = Color.red;
-//			bt2.colors = co2;
-//
-//			Debug.Log ("coin same to while ="+ _prebtn);
-//		}
-
 		_prebtn = btnname;
 		Debug.Log ("_prebtn ="+ _prebtn);
 		//color (idx);
@@ -674,25 +731,37 @@ public class Connect_script_DK: MonoBehaviour {
 
 	public void single_test()
 	{
-		//cardback [0].RotateCard (1);
+//		List<int> poker_list =_poker.get_pokser_res_idx (poker_type.Player);
+//		for (int i=0; i< poker_list.Count; i++) {
+//			int id = poker_list[i];
+//			cardlist [i].GetComponent<Image> ().sprite = _poker_sprite [id]; //Your sprite
+//			cardlist [i].RotateCard (2,0);
+//			cardlist[i].CardRotateComplete += dispayer_card_open_done;
+//		}
+
+
 	}
 
 	void Update () {
 
 		if (poker_open.Count != 0) {
-			for( int i=0;i< poker_open.Count;i++)
-			{
-				Debug.Log("poker_open"+poker_open[i]);
-				direct_turn_poker(poker_open[i]);
-			}
+			
+			direct_turn_poker();
+			
 			poker_open.Clear();
+			caculate_point();
 		}
 
 		if (state_update.Count != 0) {
 			string state = state_update[0];
+			Debug.Log("state_update = "+ state);
+			if( state == "NewRoundState") new_round_init();
 			if( state == "StartBetState")start_bet_init();
 			if( state == "EndBetState")end_bet_init();
+			if( state == "OpenState") open_card_init();
 			if( state == "EndRoundState") end_round_init();
+
+
 			state_update.Clear();
 		}
 
@@ -701,7 +770,28 @@ public class Connect_script_DK: MonoBehaviour {
 	private void card_open_done(object sender,stringArgs e)
 	{
 		cardback[Int32.Parse(e.msg)].CardRotateComplete -= card_open_done;
-		cardlist [Int32.Parse(e.msg)].RotateCard (2,Int32.Parse(e.msg));
+
+		//change poker
+		int idx = Int32.Parse (e.msg);
+		int poker_idx = 0;
+		string poker ="";
+
+		//單張處理
+		if (idx == 0 || idx == 1) poker = _poker.get_poker (poker_type.Player);
+		if (idx == 2 || idx == 3) poker = _poker.get_poker (poker_type.Banker);
+		if (idx == 4 || idx == 5) poker = _poker.get_poker (poker_type.River);
+		poker_idx = _poker.pokerTrans (poker);
+
+		cardlist [idx].GetComponent<Image> ().sprite = _poker_sprite [poker_idx]; //Your sprite
+		cardlist [idx].RotateCard (2,idx);
+		cardlist[idx].CardRotateComplete += dispayer_card_open_done;
+
+	}
+
+	private void dispayer_card_open_done(object sender,stringArgs e)
+	{
+		cardback[Int32.Parse(e.msg)].CardRotateComplete -= dispayer_card_open_done;
+		caculate_point();
 	}
 
 	public void sim_pack()

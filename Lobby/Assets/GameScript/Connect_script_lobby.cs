@@ -32,10 +32,13 @@ public class Connect_script_lobby : MonoBehaviour {
 	public List<Sprite> _bglist;
 	public UI_Enable _shareitem;
 
+	//share
+	public UI_Text _error_msg;
+	public avalibe _phase_msg;
+
 	public Connect_script_DK _dk_proxy;
 
 	private permission_handler _permission_handler;
-
 
 	private Model _model = Model.Instance;
 	
@@ -113,6 +116,19 @@ public class Connect_script_lobby : MonoBehaviour {
 		//	}
 		//}
 	}
+
+	public void error_msg(string msg)
+	{
+		//msg = msg.Insert((msg.Length), "\n");
+		_error_msg.textContent += msg +"\n";
+	}
+
+	public void phase_msg(int phase,avalibe.cutomer_fun f)
+	{
+		_phase_msg.auto_set_avalible(phase,f);
+	}
+
+
 
 	public void Log(string log)
 	{

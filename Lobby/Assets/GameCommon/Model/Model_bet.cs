@@ -35,6 +35,10 @@ namespace GameCommon.Model
 		public Dictionary<string,List<JObject>> zone_bet;
 		public List<JObject> queue;
 
+		//settle
+		public List<string> settle { get; set; }
+		public List<string> bet { get; set;}
+
 		public Model_bet()
 		{
 			zone_mapping = new Dictionary<string, string> ();
@@ -44,6 +48,9 @@ namespace GameCommon.Model
 			queue = new List<JObject> ();
 
 			zone_bet = new Dictionary<string, List<JObject>> ();
+
+			settle = new List<string> ();
+			bet = new List<string> ();
 
 			define_bet_zone ();
 		}
@@ -120,6 +127,8 @@ namespace GameCommon.Model
 		public string clean_bet()
 		{
 			zone_bet.Clear ();
+			settle.Clear ();
+			bet.Clear ();
 			return zone_bet.Count.ToString();
 
 		}
@@ -131,6 +140,16 @@ namespace GameCommon.Model
 			return zone_idx_mapping[type];
 		}
 
+		public void settle_amount(string settle_amount)
+		{
+			settle  = new List<string>(settle_amount.Split(','));
+		}
+
+		public void bet_amount(string bet_amount)
+		{
+			bet  = new List<string>(bet_amount.Split(','));
+		}
+
 		//deprecate
 		public string display_name(string type)
 		{
@@ -139,6 +158,7 @@ namespace GameCommon.Model
 			return zone_displayname_mapping [type];
 		}
 
+		//deprecate
 		public int coin_value(string coinType)
 		{
 			return coin_list[coinType];
