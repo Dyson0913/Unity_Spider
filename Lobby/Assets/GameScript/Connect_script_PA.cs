@@ -14,7 +14,7 @@ using GameScript.parser;
 using GameCommon.StateMachine;
 using GameScript.utility;
 
-public class Connect_script_DK: MonoBehaviour {
+public class Connect_script_PA: MonoBehaviour {
 
 	private IConnect _Connector;
 
@@ -128,7 +128,7 @@ public class Connect_script_DK: MonoBehaviour {
 		_state_m = new StateMachine ();
 		_state_m._state = "None";
 
-		_bet_model = new DK_bet ();
+		_bet_model = new PA_bet ();
 
 		foreach (Button bt in _btnlist) 
 		{
@@ -211,7 +211,7 @@ public class Connect_script_DK: MonoBehaviour {
 	{
 		Debug.Log ("dk uuid = " + _model.getValue("uuid"));
 		_Connector = new websocketModule();
-		_Connector.parser = new DK_parser ();
+		_Connector.parser = new PA_parser ();
 		_Connector.create ("ws://www.mm9900.net:8201/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;

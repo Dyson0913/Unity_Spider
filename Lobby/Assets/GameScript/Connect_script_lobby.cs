@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -123,7 +124,7 @@ public class Connect_script_lobby : MonoBehaviour {
 		_error_msg.textContent += msg +"\n";
 	}
 
-	public void phase_msg(int phase,avalibe.cutomer_fun f)
+	public void phase_msg(int phase,avalibe.effect f)
 	{
 		_phase_msg.auto_set_avalible(phase,f);
 	}
@@ -166,6 +167,7 @@ public class Connect_script_lobby : MonoBehaviour {
 
 	private void fade_out()
 	{
+
 		_bg.GetComponent<Image> ().CrossFadeAlpha(0.1f, 0.5f, false);
 		Invoke("lobbytogame", 0.5f);
 	}

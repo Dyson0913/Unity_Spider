@@ -12,9 +12,9 @@ using UnityEngine;
 
 namespace GameScript.parser
 {
-	public class DK_parser : IParser
+	public class PA_parser : IParser
 	{
-		public DK_parser()
+		public PA_parser()
 		{
 			
 		}

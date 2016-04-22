@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 using System;
 using System.Reflection;
@@ -17,6 +18,12 @@ public class avalibe : MonoBehaviour {
 
 	public cutomer_fun my_cus;
 
+	public enum effect
+	{
+		just_open_close=0,
+		fadeout =1
+	}
+
 	// Use this for initialization
 	void Start () {
 		viewUpdate = false;
@@ -24,25 +31,37 @@ public class avalibe : MonoBehaviour {
 		my_cus = null;
 	}
 
-	public void auto_set_avalible(int enable_item_idx,cutomer_fun f)
+	public void auto_set_avalible(int enable_item_idx,effect f)
 	{
 		data.Clear ();
-		my_cus = f;
-		for (int i=0; i< _list.Count; i++) {
-			if( enable_item_idx == i) data.Add("1");
-			else data.Add("0");
+		if( f == effect.just_open_close) my_cus = myavalible;
+		if( f == effect.fadeout) my_cus = myfadeout;
+
+		int k = _list.Count;
+		string a = Convert.ToString (enable_item_idx, 2);
+		string full = string.Format("{0:D"+k+"}",Int32.Parse(a));
+		char[] ns = full.ToCharArray ();
+		Array.Reverse(ns);
+		for (int i=0; i< ns.Length; i++) {
+			data.Add ( ns[i].ToString());
 		}
+
+
 		viewUpdate = true;
 
 	}
 
-	public void fadeout(int idx,bool b)
+	public void myfadeout(int idx,bool b)
 	{
-		GameObject ob = _list [0];
 
+		_list[idx].gameObject.SetActive(b);
+		if (b == false)
+			return;
 
-		//_list[idx].gameObject.SetActive(b);
-		//_list[0].gameObject.GetComponent<Image ().CrossFadeAlpha (1f, 0.5f, false);
+		Image a = _list [idx].gameObject.GetComponent<Image> ();
+		Color c = a.color;
+		c.a = 1;
+		_list[idx].gameObject.GetComponent<Image> ().CrossFadeAlpha (0.0f, 1.5f, false);
 	}
 
 

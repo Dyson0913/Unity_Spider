@@ -142,12 +142,32 @@ namespace GameCommon.Model
 
 		public void settle_amount(string settle_amount)
 		{
-			settle  = new List<string>(settle_amount.Split(','));
+
+			List<string> bet = new List<string>(settle_amount.Split(','));
+			//TODO not in here
+			bet.RemoveAt (bet.Count-1);
+			bet.RemoveAt (bet.Count-1);
+			float mytotal = 0;
+			foreach (string value in bet) {
+				mytotal += float.Parse( value);
+			}
+
+			bet.Add (mytotal.ToString ());
+			settle = bet;//new List<string>(settle_amount.Split(','));
 		}
 
 		public void bet_amount(string bet_amount)
 		{
-			bet  = new List<string>(bet_amount.Split(','));
+			List<string> my_bet = new List<string>(bet_amount.Split(','));
+			my_bet.RemoveAt(my_bet.Count-1);
+			my_bet.RemoveAt(my_bet.Count-1);
+			float mytotal = 0;
+			foreach (string value in my_bet) {
+				mytotal += float.Parse( value);
+			}
+			
+			my_bet.Add (mytotal.ToString ());
+			bet = my_bet;//new List<string>(bet_amount.Split(','));
 		}
 
 		//deprecate
