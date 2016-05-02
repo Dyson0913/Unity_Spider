@@ -27,6 +27,9 @@ namespace GameScript.utility
 
 		public void set_all(poker_type type,string card)
 		{
+			if (card == "")
+				return;
+
 			if (type == poker_type.Player) {
 				playercard = new List<string>(card.Split(','));
 			}
@@ -80,7 +83,13 @@ namespace GameScript.utility
 
 
 		public int pokerTrans(string poker_s)
-		{			
+		{	
+			if (poker_s == "Jj")
+				return 53;
+
+			if (poker_s == "Jq")
+				return 54;
+
 			String point = poker_s.Substring(0, 1);
 			String color = poker_s.Substring(1, 1);
 			

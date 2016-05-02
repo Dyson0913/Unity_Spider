@@ -38,6 +38,8 @@ public class Connect_script_lobby : MonoBehaviour {
 	public avalibe _phase_msg;
 
 	public Connect_script_DK _dk_proxy;
+	public Connect_script_PA _pa_proxy;
+	public Connect_script_7pk _7pk_proxy;
 
 	private permission_handler _permission_handler;
 
@@ -190,7 +192,10 @@ public class Connect_script_lobby : MonoBehaviour {
 			_dk_proxy.init();
 		}
 		if (mygame == "pa") {
-			
+			_pa_proxy.init();
+		}
+		if (mygame == "s7pk") {
+			_7pk_proxy.init ();
 		}
 	}
 
@@ -203,8 +208,6 @@ public class Connect_script_lobby : MonoBehaviour {
 
 		_shareitem.item_set ("back_lobby");
 
-
-		
 		//handle leaveing game
 		string mygame = _model.getValue ("current_game");
 		Debug.Log ("out "+ mygame);
@@ -212,7 +215,10 @@ public class Connect_script_lobby : MonoBehaviour {
 			_dk_proxy.leave();
 		}
 		if (mygame == "pa") {
-			
+			_pa_proxy.leave();
+		}
+		if (mygame == "s7pk") {
+			_7pk_proxy.leave ();
 		}
 	}
 

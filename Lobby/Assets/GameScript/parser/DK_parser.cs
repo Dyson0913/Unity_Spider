@@ -8,12 +8,16 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using ConnectModule;
-using UnityEngine;
+
+
+using GameCommon.Model;
 
 namespace GameScript.parser
 {
 	public class DK_parser : IParser
 	{
+		private Model _model = Model.Instance;
+
 		public DK_parser()
 		{
 			
@@ -22,32 +26,45 @@ namespace GameScript.parser
 		public override packArgs paser(string data)
 		{
 			Debug.Log ("data = "+data);
+			Dictionary<string,string> pack = new Dictionary<string,string> ();
+			JToken init = JToken.Parse(data);
+			string pack_type = init["message_type"].ToString();
+
+			_model.putValue ("dk_message_type",pack_type);
+			_model.putValue ("dk_game_id",init["game_id"].ToString());
+			_model.putValue ("dk_game_round",init["game_round"].ToString());
+			_model.putValue ("dk_game_type",init["game_type"].ToString());
+
+			if (pack_type == "MsgPlayerBet") 
+			{
+				//				if( jo.Property ("timestamp").Value.ToString () =="1111" || jo.Property ("result").Value.ToString () =="0")
+				//				{
+				//					return new packArgs(pack);
+				//				}
+				pack.Add ("result",init["result"].ToString());
+				return new packArgs(pack);
+			}
+
+			_model.putValue ("dk_game_state",init["game_state"].ToString());
+
+			//old 
 			JObject jo = new JObject();
 			jo = JsonConvert.DeserializeObject<JObject>(data);
-			Dictionary<string,string> pack = new Dictionary<string,string> ();
-			string pack_type = jo.Property ("message_type").Value.ToString ();
 
 			if (pack_type == "MsgBPInitialInfo") {
-				string _state = jo.Property ("game_state").Value.ToString ();
-				pack.Add ("message_type", pack_type);
-				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
-				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
-				pack.Add ("game_id", jo.Property ("game_id").Value.ToString ());
-				pack.Add ("game_type", jo.Property ("game_type").Value.ToString ());
-				pack.Add ("remain_time", jo.Property ("remain_time").Value.ToString ());
+				string _state = init["game_state"].ToString();
 
-				JObject p = new JObject ();
-				p = JsonConvert.DeserializeObject<JObject> (jo.Property ("cards_info").Value.ToString ());
-//				pack.Add ("player_card_list", p.Property ("player_card_list").Value.ToString ());
-//				pack.Add ("banker_card_list", p.Property ("banker_card_list").Value.ToString ());
-//				pack.Add ("river_card_list", p.Property ("river_card_list").Value.ToString ());
-//				pack.Add ("extra_card_list", p.Property ("extra_card_list").Value.ToString ());
+				_model.putValue ("dk_remain_time",init["remain_time"].ToString());
 
-
-				pack.Add ("player_card_list", arr_parse_no_token(p.Property ("player_card_list").Value.ToString ()));
-				pack.Add ("banker_card_list", arr_parse_no_token(p.Property ("banker_card_list").Value.ToString ()));
-				pack.Add ("river_card_list", arr_parse_no_token(p.Property ("river_card_list").Value.ToString ()));
-				pack.Add ("extra_card_list", arr_parse_no_token(p.Property ("extra_card_list").Value.ToString ()));
+				JToken cards = JToken.Parse(init["cards_info"].ToString());
+				JArray p_card_jarr = cards["player_card_list"] as JArray;
+				JArray b_card_jarr = cards["banker_card_list"] as JArray;
+				JArray r_card_jarr = cards["river_card_list"] as JArray;
+				JArray e_card_jarr = cards["extra_card_list"] as JArray;
+				_model.putValue ("player_card_list", Jarr_parse_no_token(p_card_jarr));
+				_model.putValue ("banker_card_list", Jarr_parse_no_token(b_card_jarr));
+				_model.putValue ("river_card_list", Jarr_parse_no_token(r_card_jarr));
+				_model.putValue ("extra_card_list", Jarr_parse_no_token(e_card_jarr));
 
 				//history
 				//Debug.Log("DK json = "+ jo.Property ("record_list").Value.ToString ());
@@ -69,50 +86,37 @@ namespace GameScript.parser
 						banker_pair.Add(recode_token["banker_pair"].ToString());
 					}
 					
-					pack.Add ("history_winner",string.Join(",",winner.ToArray()));
-					pack.Add ("history_point",string.Join(",",point.ToArray()));
-					pack.Add ("history_player_pair",string.Join(",",player_pair.ToArray()));
-					pack.Add ("history_banker_pair",string.Join(",",player_pair.ToArray()));
+					_model.putValue ("history_winner",string.Join(",",winner.ToArray()));
+					_model.putValue ("history_point",string.Join(",",point.ToArray()));
+					_model.putValue ("history_player_pair",string.Join(",",player_pair.ToArray()));
+					_model.putValue ("history_banker_pair",string.Join(",",player_pair.ToArray()));
 					
 				}
 
 
 			} else if (pack_type == "MsgBPState") {
-				string _state = jo.Property ("game_state").Value.ToString ();
-				pack.Add ("message_type", pack_type);
-				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
-				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
-				pack.Add ("remain_time", jo.Property ("remain_time").Value.ToString ());
 
+				_model.putValue ("dk_remain_time",init["remain_time"].ToString());
+
+				string _state = init["game_state"].ToString();
 				history_parse(pack,data,_state);
 
 			} else if (pack_type == "MsgBPOpenCard") {
-				pack.Add ("message_type", pack_type);
-				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
-				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
-				pack.Add ("card_type", jo.Property ("card_type").Value.ToString ());
 
+				_model.putValue ("card_type",init["card_type"].ToString());
+				_model.putValue ("card_list", arr_parse_no_token(init["card_list"].ToString ()));
 
-				pack.Add ("card_list", arr_parse_no_token(jo.Property ("card_list").Value.ToString ()));
-
-				//JArray ja = JArray.Parse(jo.Property ("card_list").Value.ToString ());
-//				List<string> pcard = new List<string>();
-//				foreach(string st in ja)
-//				{
-//					pcard.Add(st);
-//				}
-//				pack.Add ("card_list", string.Join(",",pcard.ToArray()));
-
-				//List<string > poker = new List<string> ();
-				//poker.Add ("card_list");
-				//arr_parse (pack, jo.Property ("card_list").Value.ToString (), poker);
+				//"cards_bigwin_prob": [0.00017,0.011068,0.072029,0.815305,1.00866,2.15512]
+				JToken token = JToken.Parse(data);
+				JArray jarr = token["cards_bigwin_prob"] as JArray;
+				_model.putValue("dk_prob", Jarr_parse_no_token(jarr));
 
 
 			}
 			else if (pack_type == "MsgBPEndRound") 
 			{
-				pack.Add ("message_type", pack_type);
-				pack.Add ("game_state", jo.Property ("game_state").Value.ToString ());
+				_model.putValue ("dk_remain_time",init["remain_time"].ToString());
+				string _state = init["game_state"].ToString();
 				List<string > poker = new List<string> ();
 				poker.Add ("bet_type");
 				poker.Add ("settle_amount");
@@ -121,22 +125,21 @@ namespace GameScript.parser
 				poker.Add ("bet_amount");
 				arr_parse (pack, jo.Property ("result_list").Value.ToString (), poker);
 			}
-			else if (pack_type == "MsgPlayerBet") 
-			{
-//				if( jo.Property ("timestamp").Value.ToString () =="1111" || jo.Property ("result").Value.ToString () =="0")
-//				{
-//					return new packArgs(pack);
-//				}
-				pack.Add ("message_type", pack_type);
-				pack.Add ("result", jo.Property ("result").Value.ToString ());
-			}
-			else 
-			{
-				pack.Add ("message_type", "check");
-				pack.Add ("_all", jo.ToString ());
-			}
+
 
 			return new packArgs(pack);
+		}
+
+		public string Jarr_parse_no_token(JArray data)
+		{
+			if (data == null)
+				return "";
+
+			List<string> raw_data = new List<string>();
+			for (int i=0; i< data.Count; i++) {
+				raw_data.Add(data[i].ToString());
+			}
+			return string.Join (",", raw_data.ToArray ());
 		}
 
 		//["jk","kc"] type 
@@ -153,7 +156,7 @@ namespace GameScript.parser
 
 		public void history_parse (Dictionary<string,string> pack,string data,string state)
 		{
-			if( state == "StartBetState" || state =="NewRoundState")
+			if( state =="NewRoundState")
 			{
 				JToken token = JToken.Parse(data);
 				Debug.Log("DK json = "+ token);

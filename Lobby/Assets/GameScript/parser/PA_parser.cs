@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using ConnectModule;
-using UnityEngine;
 
 namespace GameScript.parser
 {
@@ -38,15 +37,9 @@ namespace GameScript.parser
 
 				JObject p = new JObject ();
 				p = JsonConvert.DeserializeObject<JObject> (jo.Property ("cards_info").Value.ToString ());
-//				pack.Add ("player_card_list", p.Property ("player_card_list").Value.ToString ());
-//				pack.Add ("banker_card_list", p.Property ("banker_card_list").Value.ToString ());
-//				pack.Add ("river_card_list", p.Property ("river_card_list").Value.ToString ());
-//				pack.Add ("extra_card_list", p.Property ("extra_card_list").Value.ToString ());
-
 
 				pack.Add ("player_card_list", arr_parse_no_token(p.Property ("player_card_list").Value.ToString ()));
 				pack.Add ("banker_card_list", arr_parse_no_token(p.Property ("banker_card_list").Value.ToString ()));
-				pack.Add ("river_card_list", arr_parse_no_token(p.Property ("river_card_list").Value.ToString ()));
 				pack.Add ("extra_card_list", arr_parse_no_token(p.Property ("extra_card_list").Value.ToString ()));
 
 				//history
@@ -54,25 +47,18 @@ namespace GameScript.parser
 				if( _state == "StartBetState" || _state =="NewRoundState")
 				{
 					JToken token = JToken.Parse(data);
-					Debug.Log("DK json = "+ token);
 					List<string> winner = new List<string>();
 					List<string> point = new List<string>();
-					List<string> player_pair = new List<string>();
-					List<string> banker_pair = new List<string>();
 					JArray jarr = token["record_list"] as JArray;
 					for (int i=0; i< jarr.Count; i++) {
 						JToken recode_token = JToken.Parse(jarr[i].ToString());
 						
 						winner.Add(recode_token["winner"].ToString());
 						point.Add(recode_token["point"].ToString());
-						player_pair.Add(recode_token["player_pair"].ToString());
-						banker_pair.Add(recode_token["banker_pair"].ToString());
 					}
 					
 					pack.Add ("history_winner",string.Join(",",winner.ToArray()));
 					pack.Add ("history_point",string.Join(",",point.ToArray()));
-					pack.Add ("history_player_pair",string.Join(",",player_pair.ToArray()));
-					pack.Add ("history_banker_pair",string.Join(",",player_pair.ToArray()));
 					
 				}
 
@@ -84,7 +70,7 @@ namespace GameScript.parser
 				pack.Add ("game_round", jo.Property ("game_round").Value.ToString ());
 				pack.Add ("remain_time", jo.Property ("remain_time").Value.ToString ());
 
-				history_parse(pack,data,_state);
+				//history_parse(pack,data,_state);
 
 			} else if (pack_type == "MsgBPOpenCard") {
 				pack.Add ("message_type", pack_type);
@@ -94,18 +80,6 @@ namespace GameScript.parser
 
 
 				pack.Add ("card_list", arr_parse_no_token(jo.Property ("card_list").Value.ToString ()));
-
-				//JArray ja = JArray.Parse(jo.Property ("card_list").Value.ToString ());
-//				List<string> pcard = new List<string>();
-//				foreach(string st in ja)
-//				{
-//					pcard.Add(st);
-//				}
-//				pack.Add ("card_list", string.Join(",",pcard.ToArray()));
-
-				//List<string > poker = new List<string> ();
-				//poker.Add ("card_list");
-				//arr_parse (pack, jo.Property ("card_list").Value.ToString (), poker);
 
 
 			}

@@ -38,14 +38,6 @@ public class DK_bet : Model_bet
 		coin_list.Add ("Coin_3", 5000);
 		coin_list.Add ("Coin_4", 10000);
 
-		//deprecate
-//		zone_displayname_mapping.Add ("BetBWPlayer", "閒家");
-//		zone_displayname_mapping.Add ("BetBWBanker", "莊家");
-//		zone_displayname_mapping.Add ("BetBWTiePoint", "合");
-//		zone_displayname_mapping.Add ("BetBWBankerPair", "莊對");
-//		zone_displayname_mapping.Add ("BetBWPlayerPair", "閒對");
-//		zone_displayname_mapping.Add ("BetBWSpecial", "特殊牌型");
-
 	}
 
 

@@ -212,7 +212,7 @@ public class Connect_script_PA: MonoBehaviour {
 		Debug.Log ("dk uuid = " + _model.getValue("uuid"));
 		_Connector = new websocketModule();
 		_Connector.parser = new PA_parser ();
-		_Connector.create ("ws://www.mm9900.net:8201/gamesocket/token/"+_model.getValue("uuid"));
+		_Connector.create ("ws://www.mm9900.net:8101/gamesocket/token/"+_model.getValue("uuid"));
 		_Connector.MsgResponse += OnMessage;
 		_Connector.stateResponse += Onstate;
 		_Connector.connect ();
@@ -246,9 +246,19 @@ public class Connect_script_PA: MonoBehaviour {
 
 		if (_Connector != null) {
 			_Connector.close ();
-			Debug.Log ("DK leave disconnect ");
+			Debug.Log ("pa leave disconnect ");
 		}
 
+	}
+
+	public void re_connect()
+	{
+		if (_Connector != null) {
+			_Connector = null;
+			connect_to_server();
+			
+			Debug.Log ("pa reconnect  ");
+		}
 	}
 
 	private void error_msg(string msg)
@@ -276,7 +286,7 @@ public class Connect_script_PA: MonoBehaviour {
 		if (st == "MsgBPInitialInfo") 
 		{
 			_state = e.pack["game_state"];
-			Debug.Log ("dk _state = " + _state);
+			Debug.Log ("pa _state = " + _state);
 			_state_m._state = _state;
 			view_enable();
 			
@@ -291,8 +301,6 @@ public class Connect_script_PA: MonoBehaviour {
 
 				_model.putValue("history_winner",e.pack["history_winner"]);
 				_model.putValue("history_point",e.pack["history_point"]);
-				_model.putValue("history_player_pair",e.pack["history_player_pair"]);
-				_model.putValue("history_banker_pair",e.pack["history_banker_pair"]);
 				//TODO MsgBPState also
 				//_Coin_item.item_set ("into_game");
 			}
@@ -313,6 +321,27 @@ public class Connect_script_PA: MonoBehaviour {
 						poker_open.Add(0);
 						poker_open.Add(1);
 					}
+					if( _poker.get_count(poker_type.Player) ==3)
+					{
+						poker_open.Add(0);
+						poker_open.Add(1);
+						poker_open.Add(2);
+					}
+					if( _poker.get_count(poker_type.Player) ==4)
+					{
+						poker_open.Add(0);
+						poker_open.Add(1);
+						poker_open.Add(2);
+						poker_open.Add(3);
+					}
+					if( _poker.get_count(poker_type.Player) ==5)
+					{
+						poker_open.Add(0);
+						poker_open.Add(1);
+						poker_open.Add(2);
+						poker_open.Add(3);
+						poker_open.Add(4);
+					}
 				}
 				
 				card = e.pack["banker_card_list"];
@@ -321,34 +350,40 @@ public class Connect_script_PA: MonoBehaviour {
 					_poker.set_all(poker_type.Banker,card);
 					if( _poker.get_count(poker_type.Banker) ==1)
 					{
-						poker_open.Add(2);
+						poker_open.Add(5);
 					}
 					if( _poker.get_count(poker_type.Banker) ==2)
 					{
-						poker_open.Add(2);
-						poker_open.Add(3);
-					}
-				}
-				
-				card = e.pack["river_card_list"];
-				if( card !="")
-				{
-					_poker.set_all(poker_type.River,card);
-					if( _poker.get_count(poker_type.River)==1)
-					{
-						poker_open.Add(4);
-					}
-					if( _poker.get_count(poker_type.River) ==2)
-					{
-						poker_open.Add(4);
 						poker_open.Add(5);
+						poker_open.Add(6);
+					}
+					if( _poker.get_count(poker_type.Banker) ==3)
+					{
+						poker_open.Add(5);
+						poker_open.Add(6);
+						poker_open.Add(7);
+					}
+					if( _poker.get_count(poker_type.Banker) ==4)
+					{
+						poker_open.Add(5);
+						poker_open.Add(6);
+						poker_open.Add(7);
+						poker_open.Add(8);
+					}
+					if( _poker.get_count(poker_type.Banker) ==5)
+					{
+						poker_open.Add(5);
+						poker_open.Add(6);
+						poker_open.Add(7);
+						poker_open.Add(8);
+						poker_open.Add(9);
 					}
 				}
+
 				
 				Debug.Log("pack all p= "+ e.pack["player_card_list"]);
 				Debug.Log("pack all b= "+ e.pack["banker_card_list"]);
-				Debug.Log("pack all r= "+ e.pack["river_card_list"]);
-				//Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
+				Debug.Log("pack all e= "+ e.pack["extra_card_list"]);
 			}
 
 			state_update.Add (_state);
@@ -403,17 +438,19 @@ public class Connect_script_PA: MonoBehaviour {
 			if( cardtype == "Banker")
 			{
 				int bcount = _poker.get_count(poker_type.Banker);
-				cardback [bcount+2].RotateCard (1,bcount+2);
-				cardback[bcount+2].CardRotateComplete += card_open_done;
+				cardback [bcount+5].RotateCard (1,bcount+5);
+				cardback[bcount+5].CardRotateComplete += card_open_done;
 				_poker.set_poker(poker_type.Banker,e.pack["card_list"]);
 			}
 			
 			if( cardtype == "River")
 			{	
-				int rcount = _poker.get_count(poker_type.River);
-				cardback [rcount+4].RotateCard (1,rcount+4);
-				cardback[rcount+4].CardRotateComplete += card_open_done;
-				_poker.set_poker(poker_type.River,e.pack["card_list"]);
+				//TODO 開
+				Debug.Log("open river");
+				//int rcount = _poker.get_count(poker_type.River);
+				//cardback [rcount+4].RotateCard (1,rcount+4);
+				//cardback[rcount+4].CardRotateComplete += card_open_done;
+				//_poker.set_poker(poker_type.River,e.pack["card_list"]);
 			}
 
 			state_update.Add (_state);
@@ -451,10 +488,7 @@ public class Connect_script_PA: MonoBehaviour {
 
 
 		}
-//		if (st == "check") 
-//		{
-//			Debug.Log("pack all = "+ e.pack["_all"]);
-//		}
+
 	}
 
 	private void log(string logmsg)
@@ -583,15 +617,10 @@ public class Connect_script_PA: MonoBehaviour {
 		poker_list = _poker.get_pokser_res_idx (poker_type.Banker);
 		for (int i=0; i< poker_list.Count; i++) {
 			int id = poker_list[i];
-			cardlist [i+2].GetComponent<Image> ().sprite = _poker_sprite [id];
+			cardlist [i+5].GetComponent<Image> ().sprite = _poker_sprite [id];
 		}
 
-		poker_list.Clear ();
-		poker_list = _poker.get_pokser_res_idx (poker_type.River);
-		for (int i=0; i< poker_list.Count; i++) {
-			int id = poker_list[i];
-			cardlist [i+4].GetComponent<Image> ().sprite = _poker_sprite [id];
-		}
+	
 
 
 		for (int idx =0; idx< poker_open.Count; idx++) {
@@ -810,7 +839,7 @@ public class Connect_script_PA: MonoBehaviour {
 			direct_turn_poker();
 			
 			poker_open.Clear();
-			caculate_point();
+			//caculate_point();
 		}
 
 		if (state_update.Count != 0) {
@@ -838,9 +867,9 @@ public class Connect_script_PA: MonoBehaviour {
 		string poker ="";
 
 		//單張處理
-		if (idx == 0 || idx == 1) poker = _poker.get_poker (poker_type.Player);
-		if (idx == 2 || idx == 3) poker = _poker.get_poker (poker_type.Banker);
-		if (idx == 4 || idx == 5) poker = _poker.get_poker (poker_type.River);
+		if (idx <=4) poker = _poker.get_poker (poker_type.Player);
+		else  poker = _poker.get_poker (poker_type.Banker);
+
 		poker_idx = _poker.pokerTrans (poker);
 
 		cardlist [idx].GetComponent<Image> ().sprite = _poker_sprite [poker_idx]; //Your sprite
@@ -852,7 +881,7 @@ public class Connect_script_PA: MonoBehaviour {
 	private void dispayer_card_open_done(object sender,stringArgs e)
 	{
 		cardback[Int32.Parse(e.msg)].CardRotateComplete -= dispayer_card_open_done;
-		caculate_point();
+		//caculate_point();
 	}
 
 	public void sim_pack()

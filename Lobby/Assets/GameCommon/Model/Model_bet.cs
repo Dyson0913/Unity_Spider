@@ -9,28 +9,24 @@ using GameCommon.Model;
 
 namespace GameCommon.Model
 {
+	//single bet  
+	// 1. add_bet()
+	// 2. server return  ok
+	// 3. bet_ok()
+
+	//uncheck bet(one zone) 
+	//1. add_bet_local() 
+	//2. ready to send  comfirm_bet() 
+	//3. server return  ok  
+	//4. bet_ok()
 
 	public class Model_bet 
 	{
-//		public static Model Instance
-//		{
-//			get { return Nested.Instance; }
-//		}
-//		
-//		private class Nested
-//		{
-//			static Nested()
-//			{
-//			}
-//			internal static readonly Model Instance = new Model();
-//		}
-
 		private Model _model = Model.Instance;
 
 		public Dictionary<string,string> zone_mapping;
 		public Dictionary<string,int> coin_list;
 		public Dictionary<string,int> zone_idx_mapping;
-		public Dictionary<string,string> zone_displayname_mapping;
 
 		public Dictionary<string,List<JObject>> zone_bet;
 		public List<JObject> queue;
@@ -39,15 +35,18 @@ namespace GameCommon.Model
 		public List<string> settle { get; set; }
 		public List<string> bet { get; set;}
 
+		public List<JObject> one_zone_temp_bet;
+
 		public Model_bet()
 		{
 			zone_mapping = new Dictionary<string, string> ();
 			zone_idx_mapping = new Dictionary<string, int> ();
-			zone_displayname_mapping = new Dictionary<string, string> ();
 			coin_list = new Dictionary<string, int> ();
 			queue = new List<JObject> ();
 
 			zone_bet = new Dictionary<string, List<JObject>> ();
+			one_zone_temp_bet = new List<JObject> ();
+
 
 			settle = new List<string> ();
 			bet = new List<string> ();
@@ -56,6 +55,28 @@ namespace GameCommon.Model
 		}
 
 		public virtual void define_bet_zone (){}
+
+		public void add_bet_local(string bet_zone_name)
+		{
+			int bet_amount = coin_list [_model.getValue ("coin_select")];
+			string type = zone_mapping[bet_zone_name];
+			JObject ob = new JObject
+			{
+				{"betType",type},
+				{"bet_amount",bet_amount}
+			};
+
+			one_zone_temp_bet.Add (ob);
+		}
+
+		public JObject comfirm_bet()
+		{
+			JObject betob = sum_temp_bet ();
+
+			//action_queue
+			queue.Add (betob);			
+			return betob;
+		}
 
 		public JObject add_bet(string bet_zone_name)
 		{
@@ -81,6 +102,27 @@ namespace GameCommon.Model
 			return ob;
 		}
 
+		public JObject sum_temp_bet()
+		{
+			int cnt = one_zone_temp_bet.Count;
+			int total = 0;
+			for (int i= 0; i< cnt; i++) {
+				JObject single = one_zone_temp_bet [i];
+				total += Int32.Parse ( single ["bet_amount"].ToString());
+			}
+
+			JObject one_remcode = one_zone_temp_bet [0];
+			string type = one_remcode ["betType"].ToString ();
+			JObject ob = new JObject
+			{
+				{"betType",type},
+				{"bet_amount",total},
+				{"total_bet_amount",total}
+			};
+
+			return ob;
+		}
+
 		public int get_total(string type)
 		{
 		   string key = zone_mapping[type];
@@ -90,7 +132,6 @@ namespace GameCommon.Model
 		   int total = 0;
 		   for (int i= 0; i< betlist.Count; i++) {
 				JObject single = betlist [i];
-				//total += coin_list[single ["bet_amount"].ToString()];
 				total += Int32.Parse ( single ["bet_amount"].ToString());
 			}
 		   return total;
@@ -122,13 +163,37 @@ namespace GameCommon.Model
 			}
 			return log;
 
+			one_zone_temp_bet.Clear ();
+		}
+
+		public List<int> get_zone_amount()
+		{
+			List<int> zone_amount = new List<int> ();
+
+			int cnt = zone_mapping.Count;
+			for (int i= 0; i<cnt; i++) {
+				string zone_name = "bet_"+(i+1);
+				string type = zone_mapping[zone_name];
+				List<JObject> lis = zone_bet [type];
+				
+				int zone_total = 0;
+				for (int k= 0; k< lis.Count; k++) {
+					JObject single = lis[k];
+					zone_total += Int32.Parse (single["total_bet_amount"].ToString());
+				}
+				zone_amount.Add(zone_total);
+			}
+
+			return zone_amount;
 		}
 
 		public string clean_bet()
 		{
+			one_zone_temp_bet.Clear ();
 			zone_bet.Clear ();
 			settle.Clear ();
 			bet.Clear ();
+
 			return zone_bet.Count.ToString();
 
 		}
@@ -144,9 +209,6 @@ namespace GameCommon.Model
 		{
 
 			List<string> bet = new List<string>(settle_amount.Split(','));
-			//TODO not in here
-			bet.RemoveAt (bet.Count-1);
-			bet.RemoveAt (bet.Count-1);
 			float mytotal = 0;
 			foreach (string value in bet) {
 				mytotal += float.Parse( value);
@@ -159,8 +221,6 @@ namespace GameCommon.Model
 		public void bet_amount(string bet_amount)
 		{
 			List<string> my_bet = new List<string>(bet_amount.Split(','));
-			my_bet.RemoveAt(my_bet.Count-1);
-			my_bet.RemoveAt(my_bet.Count-1);
 			float mytotal = 0;
 			foreach (string value in my_bet) {
 				mytotal += float.Parse( value);
@@ -170,19 +230,7 @@ namespace GameCommon.Model
 			bet = my_bet;//new List<string>(bet_amount.Split(','));
 		}
 
-		//deprecate
-		public string display_name(string type)
-		{
-			if (!zone_displayname_mapping.ContainsKey (type))
-				return "";
-			return zone_displayname_mapping [type];
-		}
 
-		//deprecate
-		public int coin_value(string coinType)
-		{
-			return coin_list[coinType];
-		}
 
 	}
 }
